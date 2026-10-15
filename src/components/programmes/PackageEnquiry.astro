@@ -1,18 +1,19 @@
 ---
 /**
  * One enquiry section from the 15 October 2026 package: its heading and intro
- * on the left, the form on the right. The package's form opened an email
- * draft; this one is RouteForm, so the enquiry is saved in the pipeline and
- * reaches the console. The fields, their words, their order, the tick and the
- * button's words are the package's, passed straight through to RouteForm.
+ * on the left, the form on the right. The fields, their words, their order,
+ * the tick and the button's words are the package's, passed straight through
+ * to RouteForm.
  *
- * Three of the package's sentences describe its email draft, and that would be
- * untrue here, so the same places carry true words instead:
- *   - the note under the intro ("This opens an email draft…") says the
- *     enquiry is sent and confirmed on the page;
- *   - the closed note under the button keeps its summary, "Your enquiry and
- *     contact details", and says how the details are used;
- *   - the copy-to-clipboard fallback is dropped, because there is no draft.
+ * It does both things (the user's choice, 15 October): the enquiry is saved in
+ * the pipeline first, so it reaches the console even if no email is sent, and
+ * then the package's email draft opens to apply@ with the same answers, with
+ * its copy box as the fallback (RouteForm's `draft`). That keeps the package's
+ * "This opens an email draft…" sentence true.
+ *
+ * "Current role" and the list are required, as in the package. The
+ * enquiry route has them optional (the cohort page uses it too), so that is
+ * checked in the browser only (RouteForm's `require`).
  *
  * The tick, "I agree to be contacted about this enquiry", is required, as in
  * the package. It only gates the browser's submit and is not stored: it is
@@ -20,6 +21,7 @@
  */
 import RouteForm from '../cohort/RouteForm.astro';
 import type { Route } from '../../lib/pipeline/forms';
+import { CONTACT_EMAIL } from '../../data/site';
 
 export interface Props {
   id: string;
@@ -47,7 +49,7 @@ const { id, heading, intro, route = 'enquiry', action, labels, order, choices, p
   <div class="enquiry-intro">
     <h2>{heading}</h2>
     <p>{intro}</p>
-    <p class="email-notice">This sends your enquiry to the team. You will see a confirmation on this page.</p>
+    <p class="email-notice">This opens an email draft. Review and send it in your email app to complete your enquiry.</p>
   </div>
   <RouteForm
     route={route}
@@ -68,10 +70,12 @@ const { id, heading, intro, route = 'enquiry', action, labels, order, choices, p
     asText={['role']}
     prompt="Choose an option"
     rows={3}
+    require={['role', 'interest']}
     agree="I agree to be contacted about this enquiry."
     privacy={{
       summary: 'Your enquiry and contact details',
-      text: 'Your details are used to reply to this enquiry. Sending an enquiry does not subscribe you to marketing.',
+      text: 'Your details are saved so the team can reply, and used to prepare this enquiry in your email app. Sending an enquiry does not subscribe you to marketing.',
     }}
+    draft={{ to: CONTACT_EMAIL, prefix: 'The Living Craft programme enquiry' }}
   />
 </section>

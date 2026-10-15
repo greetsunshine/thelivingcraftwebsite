@@ -2388,6 +2388,8 @@
 #pkg .route-form button[type='submit'] .arrow { display: none; }
 #pkg .route-form button[type='submit']::after { content: '↗'; }
 #pkg .route-form .form-status { margin: 0; min-height: 0; text-align: left; font-size: 15px; color: var(--green); line-height: 1.5; }
+/* A message about something that went wrong is red, as on the rest of the site. */
+#pkg .route-form .form-status.err { color: var(--danger); }
 #pkg .route-form .rf-privacy { margin-top: 16px; font-size: 14px; line-height: 1.6; color: var(--muted); }
 /* The package's "I agree to be contacted" tick (RouteForm's `agree`). The
    label rule above would make it a block; the package draws it as a row. */

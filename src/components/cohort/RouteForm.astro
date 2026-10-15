@@ -145,6 +145,19 @@ export interface Props {
   mirror?: Record<string, string>;
   /** Rows for every text area, instead of the definition's. */
   rows?: number;
+  /**
+   * Optional fields this page asks for as required, by name. Checked in the
+   * browser only: the server still accepts them empty, because the cohort
+   * page uses the same route with these fields optional.
+   */
+  require?: string[];
+  /**
+   * After the enquiry is saved, open an email draft to this address with the
+   * same answers, as the 15 October package did, and offer the text to copy
+   * if no email app opens. The save comes first, so an enquiry is never lost
+   * when the email is not sent.
+   */
+  draft?: { to: string; prefix: string };
 }
 
 const {
@@ -171,6 +184,8 @@ const {
   privacy,
   mirror = {},
   rows,
+  require = [],
+  draft,
 } = Astro.props;
 
 const definition = FORMS[route];
@@ -206,6 +221,7 @@ const form: FormDefinition = {
           return [];
         }
       }
+      if (require.includes(f.name)) shown = { ...shown, required: true };
       if (labels[f.name]) shown = { ...shown, label: labels[f.name] };
       if (!hints) shown = { ...shown, hint: undefined };
       return [shown];
@@ -248,6 +264,8 @@ const renderField = (field: Field) => {
   data-step-count={effectiveSteps.length}
   data-labels={Object.keys(labels).length ? JSON.stringify(labels) : undefined}
   data-mirror={Object.keys(mirror).length ? JSON.stringify(mirror) : undefined}
+  data-require={require.length ? JSON.stringify(require) : undefined}
+  data-draft={draft ? JSON.stringify(draft) : undefined}
   novalidate
 >
   {
@@ -742,6 +760,51 @@ const renderField = (field: Field) => {
       }
     })();
 
+    /** RouteForm's `draft`: where the email draft goes after the save. */
+    const draftTo: { to: string; prefix: string } | null = (() => {
+      try {
+        return form.dataset.draft ? JSON.parse(form.dataset.draft) : null;
+      } catch {
+        return null;
+      }
+    })();
+
+    /**
+     * The draft's text, in the package's shape: the prefix, the programme,
+     * then one "Label: answer" line per field shown, in the page's words, and
+     * the reference the console holds. Read before the form leaves the page.
+     */
+    const draftText = (reference: string): string | null => {
+      if (!draftTo) return null;
+      const programme = document.title.split(' | ')[0];
+      const lines = [draftTo.prefix, `Programme: ${programme}`, ''];
+      form.querySelectorAll<HTMLElement>('label').forEach((label) => {
+        const control = label.querySelector<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+          'input:not([type=checkbox]), select, textarea',
+        );
+        if (!control || control.type === 'hidden') return;
+        const name = label.querySelector('.rf-label')?.textContent?.trim() ?? control.name;
+        const value =
+          control instanceof HTMLSelectElement
+            ? control.value
+              ? (control.selectedOptions[0]?.text ?? '')
+              : ''
+            : control.value;
+        lines.push(`${name}: ${value.trim()}`);
+      });
+      lines.push(`Reference: ${reference}`);
+      return lines.join('\n');
+    };
+
+    /** RouteForm's `require`: optional fields this page asks for as required. */
+    const required: string[] = (() => {
+      try {
+        return JSON.parse(form.dataset.require ?? '[]');
+      } catch {
+        return [];
+      }
+    })();
+
     /** RouteForm's `agree`: the tick that has to be on before this can be sent. */
     const agreeBox = form.querySelector<HTMLInputElement>('input[name="contact_agree"]');
 
@@ -897,9 +960,49 @@ const renderField = (field: Field) => {
         /* measurement never affects the person */
       }
 
+      // RouteForm's `draft`: the package's copy box under the saved panel,
+      // then the email app. Built before the form leaves the page.
+      const text = draftText(reference);
+      if (text !== null) {
+        const result = document.createElement('div');
+        result.className = 'enquiry-result';
+        result.innerHTML = `
+          <p class="form-status"></p>
+          <p>If your email app did not open, you can copy your enquiry below.</p>
+          <textarea readonly aria-label="Your enquiry text" rows="8"></textarea>
+          <button type="button" class="text-button">Copy enquiry</button>`;
+        const note = result.querySelector<HTMLElement>('.form-status')!;
+        note.textContent = 'Your enquiry text is ready. Review and send it in your email app, or copy it below.';
+        const box = result.querySelector('textarea')!;
+        box.value = text;
+        result.querySelector('button')!.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            box.focus();
+            box.select();
+            document.execCommand('copy');
+          }
+          note.textContent = 'Enquiry copied.';
+        });
+        panel.appendChild(result);
+      }
+
       form.replaceWith(panel);
       (panel as HTMLElement).setAttribute('tabindex', '-1');
       (panel as HTMLElement).focus();
+
+      if (text !== null && draftTo) {
+        const programme = document.title.split(' | ')[0];
+        const subject = encodeURIComponent(`${draftTo.prefix} - ${programme}`);
+        const link = document.createElement('a');
+        link.href = `mailto:${draftTo.to}?subject=${subject}&body=${encodeURIComponent(text)}`;
+        try {
+          link.click();
+        } catch {
+          /* the copy box above is the fallback */
+        }
+      }
     };
 
     // ── Continue / Back ─────────────────────────────────────────────────
@@ -972,6 +1075,18 @@ const renderField = (field: Field) => {
       const errors: { field: string; code: string; message: string }[] = validate(route, input).errors.filter(
         (e) => !(e.field in mirror),
       );
+      required.forEach((name) => {
+        const def = definition.fields.find((f) => f.name === name);
+        if (!def || !fieldEl(name) || String(input[name] ?? '').trim()) return;
+        if (errors.some((e) => e.field === name)) return;
+        errors.push({ field: name, code: 'required', message: messageFor({ ...def, required: true }, 'required') });
+      });
+      // Keep the errors in the order the fields appear, so focus lands on the first one.
+      const place = (name: string) => {
+        const el = fieldEl(name);
+        return el ? Array.from(form.elements).indexOf(el as Element) : 9999;
+      };
+      errors.sort((a, b) => place(a.field) - place(b.field));
       if (agreeBox && !agreeBox.checked) {
         errors.push({
           field: 'contact_agree',

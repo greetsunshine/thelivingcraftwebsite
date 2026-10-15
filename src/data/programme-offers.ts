@@ -105,9 +105,14 @@ export const withoutWeek = (s?: string): string => s?.replace(' per week', '') ?
 // Lines the package repeats
 // ---------------------------------------------------------------------------
 
-/** "26 years of engineering experience, including roles at Google, Amazon and Walmart". */
+/**
+ * "26 years of engineering experience, including roles at Google, Amazon and
+ * Walmart Labs". The package names Walmart Labs; the user approved that
+ * wording for these pages on 15 October. facts.ts, and so the rest of the
+ * site, still says Walmart.
+ */
 export const EXPERIENCE = (() => {
-  const c = practitioner.companies;
+  const c = practitioner.companies.map((name) => (name === 'Walmart' ? 'Walmart Labs' : name));
   return `${practitioner.yearsExperience} years of engineering experience, including roles at ${c.slice(0, -1).join(', ')} and ${c[c.length - 1]}`;
 })();
 
