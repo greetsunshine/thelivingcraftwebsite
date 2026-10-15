@@ -311,3 +311,12 @@ footer#pkg-footer nav a {
     font-size:15px;
   }
 }
+
+
+/* ── 6. phones ─────────────────────────────────────────────────────────────
+   The footer links stacked at 12px apart were about 23px tall to tap. The
+   same spacing, made of padding instead, gives each one 31px. */
+@media (max-width: 620px) {
+  footer#pkg-footer nav { gap: 4px; }
+  footer#pkg-footer nav a { display: block; padding: 4px 0; }
+}

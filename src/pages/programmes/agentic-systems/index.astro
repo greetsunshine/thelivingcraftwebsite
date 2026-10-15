@@ -67,25 +67,25 @@ const description = `Compare ${hoursList('agentic-systems', 'and')}-hour program
 <section class="section build-comparison" id="choose-your-programme">
 <h2>Choose your programme</h2>
 <div class="table-wrap" role="region" aria-label="Programme comparison" tabindex="0">
-<table>
-<thead>
-<tr>
-<th scope="col">Programme</th>
-<th scope="col">Main outcome</th>
-<th scope="col">Live hours</th>
-<th scope="col">Independent work</th>
-<th scope="col">Fee per participant</th>
+<table role="table">
+<thead role="rowgroup">
+<tr role="row">
+<th scope="col" role="columnheader">Programme</th>
+<th scope="col" role="columnheader">Main outcome</th>
+<th scope="col" role="columnheader">Live hours</th>
+<th scope="col" role="columnheader">Independent work</th>
+<th scope="col" role="columnheader">Fee per participant</th>
 </tr>
 </thead>
-<tbody>
+<tbody role="rowgroup">
           {
             offersIn('agentic-systems').map((t) => (
-              <tr>
-                <td>{t.name}</td>
-                <td>{SUMMARY[t.slug]}</td>
-                <td>{t.hours}</td>
-                <td>{perWeek(t.independentWork)}</td>
-                <td>{t.fee}</td>
+              <tr role="row">
+                <td role="cell" data-label="Programme">{t.name}</td>
+                <td role="cell" data-label="Main outcome">{SUMMARY[t.slug]}</td>
+                <td role="cell" data-label="Live hours">{t.hours}</td>
+                <td role="cell" data-label="Independent work">{perWeek(t.independentWork)}</td>
+                <td role="cell" data-label="Fee per participant">{t.fee}</td>
               </tr>
             ))
           }

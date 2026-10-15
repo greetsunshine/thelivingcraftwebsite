@@ -63,23 +63,23 @@ const description = `Compare mock interviews, preparation planning and an agenti
 <section class="section career-comparison" id="choose-the-support-you-need">
 <h2>Choose the support you need</h2>
 <div class="table-wrap" role="region" aria-label="Programme comparison" tabindex="0">
-<table>
-<thead>
-<tr>
-<th scope="col">Package</th>
-<th scope="col">What is included</th>
-<th scope="col">Total session time</th>
-<th scope="col">Fee</th>
+<table role="table">
+<thead role="rowgroup">
+<tr role="row">
+<th scope="col" role="columnheader">Package</th>
+<th scope="col" role="columnheader">What is included</th>
+<th scope="col" role="columnheader">Total session time</th>
+<th scope="col" role="columnheader">Fee</th>
 </tr>
 </thead>
-<tbody>
+<tbody role="rowgroup">
           {
             offersIn('career-preparation').map((t) => (
-              <tr>
-                <td>{t.name}</td>
-                <td>{SUMMARY[t.slug]}</td>
-                <td>{hoursFigure(t.hours)}</td>
-                <td>{t.fee}</td>
+              <tr role="row">
+                <td role="cell" data-label="Package">{t.name}</td>
+                <td role="cell" data-label="What is included">{SUMMARY[t.slug]}</td>
+                <td role="cell" data-label="Total session time">{hoursFigure(t.hours)}</td>
+                <td role="cell" data-label="Fee">{t.fee}</td>
               </tr>
             ))
           }

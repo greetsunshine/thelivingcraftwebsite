@@ -2406,3 +2406,46 @@
 #pkg .route-form .rf-agree + .rf-step-actions { margin-top: 0; }
 /* The saved panel replaces the form in place. */
 #pkg .enquiry .rf-saved { padding: 28px 0; border-top: 1px solid var(--gold); }
+
+
+/* ── 4. phones and tablets ──────────────────────────────────────────────────
+   The package's own breakpoints (1150, 900, 620 and 380px) already reflow
+   every section. These rules add what they left out. */
+
+/* Some pictures bleed past the page edge on purpose. At about 1024px two of
+   them ran past the screen and the whole page scrolled sideways by up to 9px.
+   "clip", unlike "hidden", keeps the enquiry intro's sticky position working. */
+#pkg { overflow-x: clip; }
+
+@media (max-width: 767px) {
+  /* Below 768px the 680px comparison tables no longer fit beside the page
+     margins, so each row becomes a card. In the package the hours and the
+     fee sat off screen to the right, behind a sideways scroll with nothing
+     to show it was there. Each cell shows its column name from data-label;
+     the ARIA roles in the markup keep it a table for screen readers. */
+  #pkg .table-wrap { overflow: visible; margin: 24px 0; }
+  #pkg .table-wrap table,
+  #pkg .table-wrap tbody,
+  #pkg .table-wrap tr,
+  #pkg .table-wrap td { display: block; width: 100%; min-width: 0; }
+  #pkg .table-wrap thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  #pkg .table-wrap tbody { border-top: 3px solid var(--green); }
+  #pkg .table-wrap tr { padding: 18px 0; border-bottom: 1px solid var(--line); }
+  #pkg .table-wrap td {
+    display: grid;
+    grid-template-columns: minmax(7.5em, 40%) 1fr;
+    gap: 12px;
+    padding: 5px 0;
+    border: 0;
+  }
+  #pkg .table-wrap td::before { content: attr(data-label); color: var(--muted); font-size: 14px; }
+  #pkg .table-wrap td:first-child { display: block; padding: 0 0 8px; font-size: 22px; line-height: 1.3; }
+  #pkg .table-wrap td:first-child::before { content: none; }
+}
