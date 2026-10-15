@@ -1,0 +1,84 @@
+---
+/**
+ * The 15 October 2026 package's own header, for the nine /programmes/ pages
+ * (staging branch feat/programme-pathways; must not merge). Its markup and
+ * menu behaviour are the package's; its styles are section 4 of
+ * templates/programme-package.css, scoped to #pkg-header.
+ *
+ * ⚠ This departs from CLAUDE.md's "ONE LOCKUP ON EVERY PAGE": the package draws
+ * its brand from its own logo.webp beside set type, not BrandLockup.astro. The
+ * user asked for the package header on 15 October; it is on staging only, and
+ * the departure has to be settled with Sunil before anything like it ships.
+ *
+ * Three links and one button, exactly as the package has them. The site's
+ * own sections (Advisory, Resources, Tools, About) are not in it.
+ */
+import { PATHWAY_NAMES } from '../../data/programme-offers';
+
+export interface Props {
+  /** Which of the three links is the current page, if any. */
+  current?: 'hub' | 'agentic-systems' | 'career-preparation';
+  /** The button's words and where it goes on this page. */
+  cta: string;
+  ctaHref: string;
+}
+
+const { current, cta, ctaHref } = Astro.props;
+
+const links: { key: Props['current']; href: string; label: string }[] = [
+  { key: 'hub', href: '/programmes/', label: 'Programmes' },
+  { key: 'agentic-systems', href: '/programmes/agentic-systems/', label: PATHWAY_NAMES['agentic-systems'] },
+  { key: 'career-preparation', href: '/programmes/career-preparation/', label: 'Career Preparation' },
+];
+---
+
+<header class="site-header" id="pkg-header">
+  <div class="header-inner">
+    <a class="brand" href="/programmes/" aria-label="The Living Craft programmes">
+      <span class="brand-mark">
+        <img src="/programmes/logo.webp" alt="" width="82" height="82" />
+      </span>
+      <span>The Living Craft</span>
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      Menu<span aria-hidden="true">☰</span>
+    </button>
+    <nav id="site-nav" aria-label="Primary">
+      {
+        links.map((l) => (
+          <a href={l.href} aria-current={l.key === current ? 'page' : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+    <a class="header-cta" href={ctaHref}>
+      {cta}<span aria-hidden="true">↗</span>
+    </a>
+  </div>
+</header>
+
+<script>
+  // The package's menu, from its app.js: the button opens and closes the
+  // links below 900px, Escape closes them, and choosing a link closes them.
+  const menu = document.querySelector<HTMLButtonElement>('#pkg-header .menu-toggle');
+  const nav = document.querySelector<HTMLElement>('#pkg-header #site-nav');
+  if (menu && nav) {
+    const close = () => {
+      menu.setAttribute('aria-expanded', 'false');
+      nav.classList.remove('is-open');
+    };
+    menu.addEventListener('click', () => {
+      const open = menu.getAttribute('aria-expanded') !== 'true';
+      menu.setAttribute('aria-expanded', String(open));
+      nav.classList.toggle('is-open', open);
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && menu.getAttribute('aria-expanded') === 'true') {
+        close();
+        menu.focus();
+      }
+    });
+    nav.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
+  }
+</script>

@@ -68,17 +68,9 @@ export interface Props {
    */
   tagManager?: boolean;
   /**
-   * The header's one action. Default: the cohort. The /programmes/ pathway and
-   * offer pages pass their own enquiry, because a career-preparation reader
-   * sent to the cohort's application is on the wrong page.
-   */
-  action?: { label: string; href: string; short?: string };
-  /** Other pages that belong with this one, in the header's second row. */
-  related?: [label: string, href: string][];
-  /**
    * The wide-screen bar at the foot that says Apply for the cohort. Default on.
-   * Off on the /programmes/ pages, for the same reason as `action`: there it
-   * would point at a different offer from the page's own.
+   * Off on the /programmes/ pages: a career-preparation reader sent to the
+   * cohort's application is on the wrong page.
    */
   stickyApply?: boolean;
   /**
@@ -97,8 +89,6 @@ const {
   noindex = false,
   bodyClass,
   tagManager = true,
-  action = { label: 'Explore the cohort', short: 'The cohort', href: '/' },
-  related,
   stickyApply = true,
   reading = true,
 } = Astro.props;
@@ -119,7 +109,16 @@ const isTool = bodyClass === 'tool-page';
     {tagManager && <GoogleTagManagerNoscript />}
     <a class="skip" href="#main">Skip to content</a>
 
-    <SiteHeader action={action} related={related} talk />
+    {/* A page may bring its own header in the `header` slot. Only the
+        /programmes/ pages do, with the 15 October package's header (staging
+        only, see PackageHeader.astro). Every other page gets the site's. */}
+    {
+      Astro.slots.has('header') ? (
+        <slot name="header" />
+      ) : (
+        <SiteHeader action={{ label: 'Explore the cohort', short: 'The cohort', href: '/' }} talk />
+      )
+    }
 
     <main id="main" class="practice">
       <slot />

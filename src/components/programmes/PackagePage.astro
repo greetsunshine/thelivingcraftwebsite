@@ -4,19 +4,19 @@
  * landing-page package (staging branch feat/programme-pathways; must not
  * merge).
  *
- * The site's own header and footer stay, through PracticeLayout, because every
- * page carries the one Living Craft lockup (CLAUDE.md, "ONE LOCKUP ON EVERY
- * PAGE"). Inside <main>, the page is the package's markup under #pkg, styled
- * by the package's own stylesheet (templates/programme-package.css), which is
- * scoped to that id and imported nowhere else.
+ * The header is the package's own (PackageHeader.astro), at the user's request
+ * on 15 October; that departs from CLAUDE.md's one-lockup rule and is staging
+ * only. The footer is still the site's. Inside <main>, the page is the
+ * package's markup under #pkg, styled by the package's own stylesheet
+ * (templates/programme-package.css), which is imported nowhere else.
  *
  * The structured data is the package's: one WebPage node with its breadcrumb,
  * in Indian English, about The Living Craft.
  */
 import '../../styles/templates/programme-package.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
+import PackageHeader from './PackageHeader.astro';
 import { SITE_ORIGIN } from '../../data/facts';
-import { PATHWAY_NAMES } from '../../data/programme-offers';
 
 export interface Props {
   title: string;
@@ -30,12 +30,18 @@ export interface Props {
   /**
    * The header button's words. The package uses Enquire on the hub and the
    * two pathway pages, and the page's own call to action on an offer page.
-   * A phone shows Enquire either way, so the button never wraps.
    */
   cta?: string;
 }
 
 const { title, description, path, breadcrumb, enquire, cta = 'Enquire' } = Astro.props;
+
+/** The header link marked current: the hub, or the pathway the page sits in. */
+const current = path.startsWith('/programmes/agentic-systems/')
+  ? 'agentic-systems'
+  : path.startsWith('/programmes/career-preparation/')
+    ? 'career-preparation'
+    : 'hub';
 
 const schema = [
   {
@@ -59,15 +65,10 @@ const schema = [
   description={description}
   canonical={path}
   schema={schema}
-  action={{ label: cta, short: 'Enquire', href: `#${enquire}` }}
-  related={[
-    ['Programmes', '/programmes/'],
-    [PATHWAY_NAMES['agentic-systems'], '/programmes/agentic-systems/'],
-    ['Career Preparation', '/programmes/career-preparation/'],
-  ]}
   stickyApply={false}
   reading={false}
 >
+  <PackageHeader slot="header" current={current} cta={cta} ctaHref={`#${enquire}`} />
   <div id="pkg" class="pkg">
     <slot />
   </div>
