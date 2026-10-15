@@ -99,3 +99,130 @@
   .programme-page main .panel .detail-row { grid-template-columns: minmax(0, 1fr); gap: var(--space-1); }
   .programme-page main .tlist li { grid-template-columns: 2rem minmax(0, 1fr); gap: var(--space-3); }
 }
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The two pathways and six offers (15 October 2026 landing-page package).
+   Everything below is `pg-` prefixed and used only by the hub, the pathway
+   pages and the offer pages (src/components/programmes/). The package's own
+   stylesheet is not imported: its type and colours are its own, and the site
+   keeps one design system. Its illustrations are kept.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── hero with an illustration or the portrait beside the words ─────────── */
+.programme-page .pg-hero.has-art {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: var(--space-7);
+  align-items: center;
+}
+.programme-page .pg-hero.is-portrait { grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr); }
+.programme-page .pg-hero h1 .pg-line { display: block; }
+.programme-page .pg-hero.has-art h1 { max-width: 20ch; }
+.programme-page .pg-hero-art { margin: 0; }
+.programme-page .pg-hero-art img {
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-card);
+}
+.programme-page .pg-hero.is-portrait .pg-hero-art img { max-width: 320px; margin-left: auto; }
+
+/* ── a section with a figure beside it ──────────────────────────────────── */
+.programme-page .pg-section.has-figure {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.6fr);
+  gap: var(--space-7);
+  align-items: start;
+}
+.programme-page .pg-figure { margin: 0; }
+.programme-page .pg-figure img { width: 100%; height: auto; border-radius: var(--radius-card); }
+
+/* ── lists, notes and the label rows ────────────────────────────────────── */
+.programme-page .pg-bullets {
+  max-width: var(--measure-prose);
+  padding: 0;
+  list-style: none;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+}
+.programme-page .pg-bullets li {
+  padding: var(--space-4) 0 var(--space-4) var(--space-5);
+  position: relative;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+  font-size: var(--size-4);
+  color: var(--text-body);
+}
+.programme-page .pg-bullets li::before {
+  content: '—';
+  position: absolute;
+  left: 0;
+  color: var(--accent-ink);
+}
+.programme-page .pg-note {
+  max-width: var(--measure-prose);
+  margin-top: var(--space-5);
+  color: var(--text-body);
+  line-height: var(--lh-normal);
+}
+.programme-page .pg-rows { max-width: var(--measure-prose); }
+
+/* ── the comparison table ───────────────────────────────────────────────── */
+.programme-page .pg-table { margin-bottom: var(--space-8, 64px); }
+.programme-page .pg-table .lc-table { min-width: 640px; }
+.programme-page .pg-table .num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.programme-page .pg-table tbody th { font-weight: var(--weight-strong); }
+
+/* ── the offer cards: numbered rows, the package's programme index ──────── */
+.programme-page .pg-offers {
+  list-style: none;
+  padding: 0;
+  border-top: var(--border-w-hair) solid var(--border-hair);
+}
+.programme-page .pg-offer {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-6) 0;
+  border-bottom: var(--border-w-hair) solid var(--border-hair);
+}
+.programme-page .pg-offer .n {
+  font-size: var(--size-2);
+  font-weight: var(--weight-strong);
+  color: var(--accent-ink);
+  padding-top: 6px;
+}
+.programme-page .pg-offer h3 { font-size: 1.5rem; margin: 0 0 var(--space-3); }
+.programme-page .pg-offer p { max-width: var(--measure-prose); color: var(--text-body); margin-bottom: var(--space-3); }
+.programme-page .pg-offer .pg-fit { color: var(--text-loud); font-weight: var(--weight-strong); }
+.programme-page .pg-offer .pg-facts { font-size: var(--size-2); color: var(--text-quiet); font-variant-numeric: tabular-nums; }
+.programme-page .pg-go {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-weight: var(--weight-strong);
+  color: var(--accent-ink);
+}
+.programme-page .pg-go:hover { color: var(--accent-ink-strong); text-decoration: underline; text-underline-offset: 0.2em; }
+
+/* "How joining works": one sentence a step, so no heading inside the row. */
+.programme-page .pg-joining li p { margin: 0; padding-top: 1px; }
+
+/* The questions sit on the page's rhythm, not in a centred card. */
+.programme-page .pg-faq { margin: 0; max-width: var(--measure-prose); }
+
+/* The form sits under the section head, left-aligned with it. */
+.programme-page #enquire .route-form,
+.programme-page #team .route-form { margin-left: 0; }
+.programme-page #team .route-form { margin-top: var(--space-6); }
+
+.programme-page .pg-related { padding-block: var(--space-6) var(--space-8, 64px) !important; color: var(--text-quiet); }
+
+@media (max-width: 900px) {
+  .programme-page .pg-hero.has-art,
+  .programme-page .pg-hero.is-portrait,
+  .programme-page .pg-section.has-figure { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  .programme-page .pg-hero.is-portrait .pg-hero-art img { max-width: 240px; margin-left: 0; }
+  .programme-page .pg-section.has-figure .pg-figure { max-width: 360px; }
+}
+@media (max-width: 560px) {
+  .programme-page .pg-offer { grid-template-columns: 2rem minmax(0, 1fr); gap: var(--space-3); }
+}

@@ -67,9 +67,34 @@ export interface Props {
    * (Track) stays: it sends a path and a referrer, never content.
    */
   tagManager?: boolean;
+  /**
+   * The header's one action. Default: the cohort. The /programmes/ pathway and
+   * offer pages pass their own enquiry, because a career-preparation reader
+   * sent to the cohort's application is on the wrong page.
+   */
+  action?: { label: string; href: string; short?: string };
+  /** Other pages that belong with this one, in the header's second row. */
+  related?: [label: string, href: string][];
+  /**
+   * The wide-screen bar at the foot that says Apply for the cohort. Default on.
+   * Off on the /programmes/ pages, for the same reason as `action`: there it
+   * would point at a different offer from the page's own.
+   */
+  stickyApply?: boolean;
 }
 
-const { title, description, canonical, schema, noindex = false, bodyClass, tagManager = true } = Astro.props;
+const {
+  title,
+  description,
+  canonical,
+  schema,
+  noindex = false,
+  bodyClass,
+  tagManager = true,
+  action = { label: 'Explore the cohort', short: 'The cohort', href: '/' },
+  related,
+  stickyApply = true,
+} = Astro.props;
 
 // Every page here wears the V5 chrome (`lc-v5`). A reading page also takes V5's
 // reading type (`lc-v5-read`); a tool page does not, so it keeps the design
@@ -87,7 +112,7 @@ const isTool = bodyClass === 'tool-page';
     {tagManager && <GoogleTagManagerNoscript />}
     <a class="skip" href="#main">Skip to content</a>
 
-    <SiteHeader action={{ label: 'Explore the cohort', short: 'The cohort', href: '/' }} talk />
+    <SiteHeader action={action} related={related} talk />
 
     <main id="main" class="practice">
       <slot />
@@ -96,7 +121,7 @@ const isTool = bodyClass === 'tool-page';
     <SiteFooter />
 
     <Track />
-    <StickyApplyBar />
+    {stickyApply && <StickyApplyBar />}
     <Analytics />
     <SpeedInsights />
   </body>

@@ -41,6 +41,15 @@ const EXTRA = [
   { path: '/about', priority: '0.7' },
   { path: '/programmes/', priority: '0.8' },
   { path: '/programmes/enterprise', priority: '0.7' },
+  // The two pathways and six offers (15 October 2026).
+  { path: '/programmes/agentic-systems/', priority: '0.8' },
+  { path: '/programmes/agentic-systems/focused-agent-build/', priority: '0.7' },
+  { path: '/programmes/agentic-systems/design-and-build-a-poc/', priority: '0.7' },
+  { path: '/programmes/agentic-systems/design-to-deployment/', priority: '0.7' },
+  { path: '/programmes/career-preparation/', priority: '0.8' },
+  { path: '/programmes/career-preparation/focused-mock-interview/', priority: '0.7' },
+  { path: '/programmes/career-preparation/interview-preparation-and-practice/', priority: '0.7' },
+  { path: '/programmes/career-preparation/agentic-ai-career-transition-roadmap/', priority: '0.7' },
   { path: '/advisory', priority: '0.7' },
   { path: '/contact', priority: '0.5' },
 

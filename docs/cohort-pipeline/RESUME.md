@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 13 October 2026
+**Last updated:** 15 October 2026
 **Funnel steps, 12 October (`console/funnel-step-detail`):** each funnel row now opens `/craft/admin/traffic/step`. It needs the new `admin_step_detail()`: **run `supabase/schema.sql` before merging.** **Run the copy from `main` or from this PR's branch, never from an older branch.** On 12 October the week-4 branch's stale copy was run and put the pre-#63 `admin_funnel()` back on production; every statement in the file is `create or replace`, so an old copy silently reverts newer functions. PR #63 below is merged.
 **Console funnel, 12 October:** application starts now have their own row on `/craft/admin/traffic`. `admin_funnel()` changed and a per-page view (`/craft/admin/traffic/page`) with its rollup `admin_page_detail()` was added. The schema ran on production on 12 October, **but the PR #63 review fixes changed it again (new `admin_event_key()`, two functions rewritten): run `supabase/schema.sql` once more before merging.** **"Started a tool: 0" is a true count, not a fault** (checked 12 October): headless Chrome on the live poc-screen sent `tool_started` on the first click, and a tagged beacon was stored and then deleted. The event only exists since 29 September, and the tool pages had 29 views from then to 12 October.
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
@@ -20,6 +20,20 @@ Its schema ran on production on 7 October, but the 8 October review fixes added 
 merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Programme pathways — 15 October (`feat/programme-pathways`, staging only)
+
+The 15 October landing-page package (`docs/2026-10-15_living-craft-landing-pages/`, a static mock-up, untracked in the main checkout) is built as Astro pages on this branch, in worktree `D:\lc-programmes`.
+
+- **Routes.** `/programmes/` (hub, rewritten), `/programmes/[pathway]/` and `/programmes/[pathway]/[offer]/`: two pathways, six offers. `/programmes/enterprise/` is untouched and wins over the dynamic route.
+- **One source.** Every fee, hour count and sentence is in `src/data/programme-offers.ts`. Copy that repeats a number is built from the field. A sentence-by-sentence check against the package's HTML found nothing missing except what was dropped on purpose (below).
+- **Forms go to the pipeline, not to mailto.** The `enquiry` route gained an optional `interest` field, rendered only where a page passes `choices` to RouteForm. The offer pages preselect their own offer; `?interest=<slug>` preselects on a pathway page. The enquiry's `question` label is now "Your question or goal" on every page, the cohort page included.
+- **Dropped from the package on purpose:** the email-draft forms and their copy, the required "I agree to be contacted" tick, the package's own stylesheet and type (the pages use the site's programme template; the illustrations are kept), and "Walmart Labs" (`facts.ts` says Walmart).
+- **Header and sticky bar.** Pathway and offer pages show "Enquire" (to `#enquire`) and no sticky Apply bar. The hub keeps "Explore the cohort" so `/` stays one click away.
+- **BLOCKED on Sunil before merge:** (1) is Design to Deployment the 6-week, 8-seat cohort at `/`? Same 30 hours and ₹1,20,000, but no weeks, seats or start date. (2) Confirm the six fees; none is region-gated. (3) After that, add the offers to `/llms.txt`, `/api/facts` and the Ask agent, with an eval probe.
+- **Checks:** `astro check` 0 errors, `npm test` 206/206, all eight routes 200 and two unknown slugs 404 on the dev server. An invalid `interest` value gets a 400 from `/api/pipeline/submit`. No submission has been saved on staging yet.
 
 ---
 

@@ -1,0 +1,122 @@
+---
+/**
+ * One section of a /programmes/ page, drawn from its entry in
+ * src/data/programme-offers.ts. Six shapes, all in the programme template's
+ * existing vocabulary (programme.css): prose, a bullet list, label-and-value
+ * rows, the numbered work list, the instructor with an optional portrait, and
+ * the question list.
+ */
+import type { Section } from '../../data/programme-offers';
+import { PORTRAIT } from '../../data/programme-offers';
+
+export interface Props {
+  section: Section;
+  /** A small label above the heading. */
+  eyebrow?: string;
+}
+
+const { section: s, eyebrow } = Astro.props;
+const figure = s.kind === 'prose' ? s.image : s.kind === 'instructor' && s.portrait ? PORTRAIT : undefined;
+---
+
+<section class="wrap" id={s.id}>
+  <div class:list={['pg-section', figure && 'has-figure']}>
+    <div class="pg-section-main">
+      <div class="sec-head">
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+        <h2>{s.heading}</h2>
+      </div>
+
+      {
+        (s.kind === 'prose' || s.kind === 'instructor') && (
+          <div class="prose stack">
+            {s.body.map((p) => (
+              <p>{p}</p>
+            ))}
+            {s.kind === 'prose' && s.link && (
+              <p>
+                <a class="btn btn-ghost" href={s.link.href}>
+                  {s.link.label}&nbsp;<span class="arrow" aria-hidden="true">→</span>
+                </a>
+              </p>
+            )}
+          </div>
+        )
+      }
+
+      {
+        s.kind === 'list' && (
+          <>
+            <ul class="pg-bullets">
+              {s.items.map((item) => (
+                <li>{item}</li>
+              ))}
+            </ul>
+            {s.note && <p class="pg-note">{s.note}</p>}
+          </>
+        )
+      }
+
+      {
+        s.kind === 'rows' && (
+          <>
+            <div class="panel pg-rows">
+              {s.rows.map(([k, v]) => (
+                <div class="detail-row">
+                  <span class="dk">{k}</span>
+                  <span class="dv">{v}</span>
+                </div>
+              ))}
+            </div>
+            {s.note && <p class="pg-note">{s.note}</p>}
+          </>
+        )
+      }
+
+      {
+        s.kind === 'steps' && (
+          <>
+            <ol class="tlist">
+              {s.items.map((item, i) => (
+                <li>
+                  <span class="n">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <h3>{item.title}</h3>
+                    <p>{item.body}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            {s.note && <p class="pg-note">{s.note}</p>}
+          </>
+        )
+      }
+
+      {
+        s.kind === 'faq' && (
+          <div class="faq pg-faq">
+            {s.items.map((item) => (
+              <details>
+                <summary>
+                  {item.q}
+                  <span class="plus" aria-hidden="true">
+                    +
+                  </span>
+                </summary>
+                <p>{item.a}</p>
+              </details>
+            ))}
+          </div>
+        )
+      }
+    </div>
+
+    {
+      figure && (
+        <figure class="pg-figure">
+          <img src={figure.src} alt={figure.alt} width={figure.width} height={figure.height} loading="lazy" decoding="async" />
+        </figure>
+      )
+    }
+  </div>
+</section>

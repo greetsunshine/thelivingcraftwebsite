@@ -23,6 +23,7 @@
 //     here would let a copy edit silently change what someone agreed to.
 
 import { ROLE_MAX, ROLE_OPTIONS } from '../../data/audience-roles';
+import { INTEREST_OPTIONS } from '../../data/programme-interests';
 
 /** A route is what somebody wants, not which form they filled in. */
 export type Route = 'application' | 'enquiry' | 'enterprise';
@@ -47,6 +48,14 @@ export interface Field {
    * server then checks length only, because there is no list to check against.
    */
   freeText?: boolean;
+  /**
+   * For kind: 'choice'. Rendered only on a page that passes this field's
+   * options to RouteForm's `choices` prop, and then only those options. The
+   * server still checks the value against the full list. The /programmes/
+   * pages use it to ask which offer somebody means; the cohort page does not
+   * pass it, so its form is unchanged.
+   */
+  pageChoice?: boolean;
   /** Rows for a textarea. Affects nothing but the shape of the box. */
   rows?: number;
   /** HTML autocomplete token, so a browser can fill it. */
@@ -307,9 +316,27 @@ export const FORMS: Record<Route, FormDefinition> = {
     fields: [
       name(),
       email(),
+      // The /programmes/ pages (15 October 2026) send their enquiries here
+      // rather than to a new route: an enquiry about a programme is still an
+      // enquiry, never an application, and a fourth route would need its own
+      // record type, templates and console handling for the same thing. This
+      // field says which offer they meant. See `pageChoice` above.
+      {
+        name: 'interest',
+        label: 'Programme or package',
+        kind: 'choice',
+        required: false,
+        max: 60,
+        hint: 'Optional. Choose “Help me choose” if you are not sure.',
+        options: INTEREST_OPTIONS,
+        pageChoice: true,
+      },
       {
         name: 'question',
-        label: 'Your question',
+        // "Your question" until 15 October 2026. The /programmes/ pages ask
+        // what somebody wants to build or prepare for, which is a goal rather
+        // than a question, and one label has to fit both.
+        label: 'Your question or goal',
         kind: 'textarea',
         required: true,
         max: 4000,

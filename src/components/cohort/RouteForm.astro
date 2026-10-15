@@ -56,7 +56,7 @@
  * one synthetic step holding every field, so there is one rendering path
  * rather than a flat branch and a stepped branch that could drift apart.
  */
-import { FORMS, type Route, type Field } from '../../lib/pipeline/forms';
+import { FORMS, type Route, type Field, type FormDefinition } from '../../lib/pipeline/forms';
 import RoleField from '../RoleField.astro';
 import { MARKETING_CONSENT } from '../../lib/pipeline/consent';
 import { APPLY_ACCESS_KEY, isApplyConfigured } from '../../data/site';
@@ -75,6 +75,16 @@ export interface Props {
   emphasis?: 'primary' | 'secondary';
   /** Whether to offer the marketing permission tick. */
   consent?: boolean;
+  /** The sentence above the fields. Falls back to the definition's intro. */
+  intro?: string;
+  /**
+   * The options this page offers for a `pageChoice` field, by field name, in
+   * the order to show them. A `pageChoice` field absent from here is not
+   * rendered at all. Values not in the definition's list are ignored.
+   */
+  choices?: Record<string, string[]>;
+  /** A choice selected on arrival, by field name: the offer the page is about. */
+  preset?: Record<string, string>;
 }
 
 const {
@@ -83,9 +93,28 @@ const {
   heading,
   emphasis = 'secondary',
   consent = true,
+  intro,
+  choices = {},
+  preset = {},
 } = Astro.props;
 
-const form = FORMS[route];
+const definition = FORMS[route];
+/**
+ * The definition as this page renders it: a `pageChoice` field kept only when
+ * the page asked for it, with its options narrowed to the page's list. Labels,
+ * limits and validation are untouched, so the server and the console read the
+ * same field the browser shows.
+ */
+const form: FormDefinition = {
+  ...definition,
+  fields: definition.fields.flatMap((f): Field[] => {
+    if (!f.pageChoice) return [f];
+    const wanted = choices[f.name];
+    if (!wanted?.length) return [];
+    const options = wanted.flatMap((v) => f.options?.filter((o) => o.value === v) ?? []);
+    return [{ ...f, options }];
+  }),
+};
 const fieldByName = new Map(form.fields.map((f) => [f.name, f]));
 
 /** One step holding every field, when the route defines no `steps`. */
@@ -119,7 +148,7 @@ const renderField = (field: Field) => {
 >
   <div class="rf-head">
     <h3>{heading ?? form.title}</h3>
-    <p class="rf-intro">{form.intro}</p>
+    <p class="rf-intro">{intro ?? form.intro}</p>
   </div>
 
   {/* Honeypot. Off-screen rather than display:none, because some bots skip
@@ -201,7 +230,11 @@ const renderField = (field: Field) => {
                         aria-describedby={describedBy || undefined}
                       >
                         <option value="">Choose one</option>
-                        {field.options?.map((o) => <option value={o.value}>{o.label}</option>)}
+                        {field.options?.map((o) => (
+                          <option value={o.value} selected={preset[field.name] === o.value}>
+                            {o.label}
+                          </option>
+                        ))}
                       </select>
                     ) : (
                       <input
