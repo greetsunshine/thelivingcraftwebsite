@@ -6,10 +6,9 @@
    WHERE IT COMES FROM. docs/2026-10-15_living-craft-landing-pages/assets/
    style.css, scoped mechanically: every selector is prefixed with #pkg (the
    wrapper PackagePage.astro draws inside <main>), `:root` and `body` become
-   #pkg, and the package's header, footer and skip-link rules are dropped
-   because the site keeps its own (the one-lockup rule in CLAUDE.md). Its serif
-   is pointed at "Source Serif 4", which SeoHead already loads; its @font-face
-   rules are dropped for the same reason. Nothing else in its rules is changed.
+   #pkg, and the package's header, footer and skip-link rules are kept apart, in
+   sections 4 and 5, scoped to its own header and footer. Its fonts
+   are its own files (section 0). Nothing else in its rules is changed.
    Its header rules are kept separately, in section 4, scoped to #pkg-header.
    To regenerate, re-run that scoping on the package file and keep the two
    hand-written blocks below.
@@ -24,6 +23,16 @@
    (its own colours, a bold Figtree h1, square buttons). It must not be
    imported by any page outside /programmes/.
    ───────────────────────────────────────────────────────────────────────────── */
+
+/* ── 0. the package's own fonts ──────────────────────────────────────────────
+   Its three files, converted to woff2 and nothing else, in public/programmes/
+   fonts/. Named Pkg* so they cannot replace the site's Google fonts on any
+   page that shares a family name. The site's "Source Serif 4" is a variable
+   font that changes its letter shapes with the size; the package's is the
+   fixed Regular cut, and the lines wrap differently with the site's. */
+@font-face{font-family:PkgFigtree;src:url(/programmes/fonts/Figtree-Regular.woff2) format("woff2");font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:PkgFigtree;src:url(/programmes/fonts/Figtree-Bold.woff2) format("woff2");font-style:normal;font-weight:700;font-display:swap}
+@font-face{font-family:PkgSourceSerif;src:url(/programmes/fonts/SourceSerif4-Regular.woff2) format("woff2");font-style:normal;font-weight:400;font-display:swap}
 
 /* ── 1. clear what the site sets and the package does not ─────────────────── */
 #pkg .hero::before,
@@ -49,7 +58,8 @@
 
 /* ── 2. the package, scoped ─────────────────────────────────────────────── */
 #pkg,
-#pkg-header {
+#pkg-header,
+#pkg-footer {
   --ivory:oklch(96% .019 87);
   --paper:oklch(98% .012 87);
   --ink:oklch(20% .025 159);
@@ -71,7 +81,7 @@
   margin:0;
   background:var(--ivory);
   color:var(--ink);
-  font-family:Figtree,Arial,sans-serif;
+  font-family:PkgFigtree,Arial,sans-serif;
   font-size:18px;
   line-height:1.65;
 }
@@ -135,19 +145,19 @@
   text-wrap:balance;
 }
 #pkg h1 {
-  font-family:Figtree,Arial,sans-serif;
+  font-family:PkgFigtree,Arial,sans-serif;
   font-weight:700;
   letter-spacing:-.055em;
   font-size:clamp(43px,5.9vw,86px);
   line-height:1.015;
 }
 #pkg h2 {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   letter-spacing:-.032em;
   font-size:clamp(32px,3.3vw,48px);
 }
 #pkg h3 {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:clamp(25px,2.2vw,32px);
   letter-spacing:-.018em;
 }
@@ -167,7 +177,7 @@
   position:relative;
 }
 #pkg .hero-copy>p:first-of-type {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:clamp(21px,2vw,27px);
   line-height:1.4;
   max-width:46ch;
@@ -316,7 +326,7 @@
   max-width:13ch;
 }
 #pkg .practitioner p:first-of-type {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:26px;
   line-height:1.5;
 }
@@ -341,7 +351,7 @@
 #pkg .joining li:before {
   content:'0' counter(joining);
   display:block;
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:37px;
   color:var(--gold-ink);
   margin-bottom:20px;
@@ -509,7 +519,7 @@
   vertical-align:top;
 }
 #pkg td:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:21px;
   min-width:170px;
 }
@@ -528,7 +538,7 @@
   padding:30px 0;
 }
 #pkg .step-num {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   color:var(--gold-ink);
   font-size:33px;
 }
@@ -813,7 +823,7 @@
   font-size:18px;
 }
 #pkg .programme-row p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:23px;
   line-height:1.5;
 }
@@ -835,7 +845,7 @@
   max-width:none;
 }
 #pkg .build-evidence p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:27px;
   line-height:1.5;
 }
@@ -989,7 +999,7 @@
   font-size:36px;
 }
 #pkg .support-routes article>div:last-child>p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:25px;
   line-height:1.45;
 }
@@ -1013,7 +1023,7 @@
   max-width:18ch;
 }
 #pkg .career-proof p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:25px;
   line-height:1.55;
 }
@@ -1123,7 +1133,7 @@
   max-width:16ch;
 }
 #pkg .offer-line {
-  font-family:Figtree,Arial,sans-serif;
+  font-family:PkgFigtree,Arial,sans-serif;
   font-size:15px;
   line-height:1.55;
   color:var(--gold-ink);
@@ -1207,7 +1217,7 @@
   border:0;
 }
 #pkg .focused-outcome p {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:29px;
   line-height:1.5;
 }
@@ -1234,7 +1244,7 @@
   gap:80px;
 }
 #pkg .focused-teacher p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:25px;
   line-height:1.55;
 }
@@ -1339,7 +1349,7 @@
   padding:40px 42px;
 }
 #pkg .poc-brief>p:first-of-type {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:26px;
   line-height:1.5;
 }
@@ -1416,7 +1426,7 @@
   padding:55px!important;
 }
 #pkg .poc-output>div {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:27px;
   line-height:1.55;
 }
@@ -1426,7 +1436,7 @@
   gap:80px;
 }
 #pkg .poc-teacher p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:25px;
   line-height:1.55;
 }
@@ -1620,7 +1630,7 @@
   gap:100px;
 }
 #pkg .deployment-summary>section:first-child p {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:29px;
   line-height:1.5;
 }
@@ -1645,7 +1655,7 @@
   gap:80px;
 }
 #pkg .deployment-teacher p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:25px;
   line-height:1.55;
 }
@@ -1804,7 +1814,7 @@
   background:var(--sage);
 }
 #pkg .mock-outcome p {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:28px;
   line-height:1.5;
 }
@@ -1814,7 +1824,7 @@
   gap:80px;
 }
 #pkg .mock-evidence p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:25px;
   line-height:1.55;
 }
@@ -1994,7 +2004,7 @@
   gap:100px;
 }
 #pkg .preparation-summary-inner>section:first-child p {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:29px;
   line-height:1.5;
 }
@@ -2006,7 +2016,7 @@
   font-size:38px;
 }
 #pkg .preparation-evidence p:first-child {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:25px;
   line-height:1.55;
 }
@@ -2185,7 +2195,7 @@
   font-size:40px;
 }
 #pkg .roadmap-document p {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:27px;
   line-height:1.55;
 }
@@ -2209,7 +2219,7 @@
   max-width:22ch;
 }
 #pkg .roadmap-practitioner p:first-of-type {
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:27px;
   line-height:1.55;
 }
@@ -2346,7 +2356,11 @@
   border: 1px solid var(--line);
   border-radius: 2px;
   padding: 12px 14px;
-  font-size: inherit;
+  /* The package's field sits beside its label, not inside it, so it takes
+     the body size (18px) rather than the label's 15px. */
+  font-family: inherit;
+  font-size: 18px;
+  line-height: 1.65;
 }
 #pkg .route-form textarea { resize: vertical; }
 #pkg .route-form .rf-hint { display: block; margin-top: 6px; font-size: 14px; color: var(--muted); }
@@ -2372,9 +2386,36 @@
 #pkg .route-form button[type='submit']:hover { background: var(--green-deep); transform: translateY(-2px); }
 /* The package's buttons end in ↗, the site's in →. */
 #pkg .route-form button[type='submit'] .arrow { display: none; }
-#pkg .route-form button[type='submit']::after { content: '↗'; font-size: 23px; }
+#pkg .route-form button[type='submit']::after { content: '↗'; }
 #pkg .route-form .form-status { margin: 0; min-height: 0; text-align: left; font-size: 15px; color: var(--green); line-height: 1.5; }
 #pkg .route-form .rf-privacy { margin-top: 16px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+/* The package's "I agree to be contacted" tick (RouteForm's `agree`). The
+   label rule above would make it a block; the package draws it as a row. */
+#pkg .route-form label.consent {
+  flex-direction: row;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 22px 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+#pkg .route-form label.consent input {
+  width: 19px;
+  height: 19px;
+  padding: 0;
+  margin: 3px 3px 3px 4px;
+  accent-color: var(--green);
+  flex: none;
+}
+@media (max-width: 620px) {
+  #pkg .route-form label:not(.consent) { margin-bottom: 18px; }
+  #pkg .route-form input:not([type='checkbox']):not([type='hidden']):not(.hp),
+  #pkg .route-form select,
+  #pkg .route-form textarea { font-size: 17px; }
+}
+#pkg .route-form .rf-agree .rf-err:not([hidden]) { display: block; margin: -12px 0 16px; }
+#pkg .route-form .rf-agree + .rf-step-actions { margin-top: 0; }
 /* The saved panel replaces the form in place. */
 #pkg .enquiry .rf-saved { padding: 28px 0; border-top: 1px solid var(--gold); }
 
@@ -2384,7 +2425,7 @@
    <main>, so it gets its own copy of the base rules #pkg has. */
 #pkg-header {
   color: var(--ink);
-  font-family: Figtree, Arial, sans-serif;
+  font-family:PkgFigtree,Arial,sans-serif;
   font-size: 18px;
   line-height: 1.65;
 }
@@ -2416,7 +2457,7 @@
   gap:12px;
   text-decoration:none;
   white-space:nowrap;
-  font-family:"Source Serif 4",Georgia,serif;
+  font-family:PkgSourceSerif,Georgia,serif;
   font-size:24px;
   letter-spacing:-.045em;
 }
@@ -2547,5 +2588,107 @@
   #pkg-header .menu-toggle {
     gap:8px;
     font-size:14px;
+  }
+}
+
+/* ── 5. the package's footer (PackageFooter.astro) ─────────────────────
+   The package's own footer rules, scoped to #pkg-footer, with the same
+   base rules as the header. Its unscoped .brand rules are copied here too,
+   because in the package they reach the footer as well as the header. */
+#pkg-footer {
+  font-family: PkgFigtree, Arial, sans-serif;
+  font-size: 18px;
+  line-height: 1.65;
+}
+#pkg-footer * { box-sizing: border-box; }
+#pkg-footer img { display: block; }
+#pkg-footer a { color: inherit; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+#pkg-footer a:focus-visible { outline: 3px solid var(--gold); outline-offset: 5px; }
+#pkg-footer .brand {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  text-decoration:none;
+  white-space:nowrap;
+  font-family:PkgSourceSerif,Georgia,serif;
+  font-size:24px;
+  letter-spacing:-.045em;
+}
+#pkg-footer .brand-mark {
+  width:66px;
+  height:43px;
+  overflow:hidden;
+  flex:none;
+}
+#pkg-footer .brand-mark img {
+  width:82px;
+  height:82px;
+  max-width:none;
+  transform:translate(-8px,-9px);
+  mix-blend-mode:multiply;
+}
+#pkg-footer {
+  padding:55px var(--gutter);
+  background:var(--green);
+  color:var(--paper);
+  display:flex;
+  align-items:center;
+  gap:30px;
+  flex-wrap:wrap;
+}
+footer#pkg-footer .brand-mark {
+  display:none;
+}
+footer#pkg-footer p {
+  font-size:14px;
+  margin:0;
+}
+footer#pkg-footer nav {
+  display:flex;
+  gap:20px;
+  font-size:14px;
+  margin-left:auto;
+}
+footer#pkg-footer >a:last-child {
+  font-size:14px;
+}
+footer#pkg-footer nav a {
+  text-decoration:none;
+}
+@media(max-width:1150px) {
+  #pkg-footer .brand {
+    font-size:21px;
+  }
+  footer#pkg-footer nav {
+    margin-left:0;
+  }
+}
+@media(max-width:900px) {
+  #pkg-footer .brand {
+    font-size:22px;
+  }
+}
+@media(max-width:620px) {
+  #pkg-footer .brand {
+    font-size:21px;
+  }
+  #pkg-footer .brand-mark {
+    width:58px;
+  }
+  #pkg-footer {
+    display:block;
+    padding:45px var(--gutter);
+  }
+  footer#pkg-footer .brand {
+    font-size:28px;
+    margin-bottom:15px;
+  }
+  footer#pkg-footer nav {
+    flex-direction:column;
+    gap:12px;
+    margin:25px 0;
+  }
+  footer#pkg-footer p {
+    font-size:15px;
   }
 }

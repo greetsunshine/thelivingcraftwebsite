@@ -3,15 +3,20 @@
  * One enquiry section from the 15 October 2026 package: its heading and intro
  * on the left, the form on the right. The package's form opened an email
  * draft; this one is RouteForm, so the enquiry is saved in the pipeline and
- * reaches the console. The fields, their words, their order and the button's
- * words are the package's, passed straight through to RouteForm.
+ * reaches the console. The fields, their words, their order, the tick and the
+ * button's words are the package's, passed straight through to RouteForm.
  *
- * Dropped from the package's form, on purpose: its "This opens an email
- * draft" notice and copy-to-clipboard fallback (there is no draft), its
- * required "I agree to be contacted" tick (a person sending an enquiry is
- * asking to be contacted, and the site's only tick is the separate marketing
- * one, which these pages do not show, matching the package's "does not
- * subscribe you to marketing").
+ * Three of the package's sentences describe its email draft, and that would be
+ * untrue here, so the same places carry true words instead:
+ *   - the note under the intro ("This opens an email draft…") says the
+ *     enquiry is sent and confirmed on the page;
+ *   - the closed note under the button keeps its summary, "Your enquiry and
+ *     contact details", and says how the details are used;
+ *   - the copy-to-clipboard fallback is dropped, because there is no draft.
+ *
+ * The tick, "I agree to be contacted about this enquiry", is required, as in
+ * the package. It only gates the browser's submit and is not stored: it is
+ * not the marketing permission, which these pages do not ask for.
  */
 import RouteForm from '../cohort/RouteForm.astro';
 import type { Route } from '../../lib/pipeline/forms';
@@ -30,9 +35,11 @@ export interface Props {
   fixed?: Record<string, string>;
   include?: string[];
   omit?: string[];
+  /** One box sent under two names: see RouteForm's `mirror`. */
+  mirror?: Record<string, string>;
 }
 
-const { id, heading, intro, route = 'enquiry', action, labels, order, choices, preset, fixed, include, omit } =
+const { id, heading, intro, route = 'enquiry', action, labels, order, choices, preset, fixed, include, omit, mirror } =
   Astro.props;
 ---
 
@@ -40,6 +47,7 @@ const { id, heading, intro, route = 'enquiry', action, labels, order, choices, p
   <div class="enquiry-intro">
     <h2>{heading}</h2>
     <p>{intro}</p>
+    <p class="email-notice">This sends your enquiry to the team. You will see a confirmation on this page.</p>
   </div>
   <RouteForm
     route={route}
@@ -56,5 +64,14 @@ const { id, heading, intro, route = 'enquiry', action, labels, order, choices, p
     fixed={fixed}
     include={include}
     omit={omit}
+    mirror={mirror}
+    asText={['role']}
+    prompt="Choose an option"
+    rows={3}
+    agree="I agree to be contacted about this enquiry."
+    privacy={{
+      summary: 'Your enquiry and contact details',
+      text: 'Your details are used to reply to this enquiry. Sending an enquiry does not subscribe you to marketing.',
+    }}
   />
 </section>

@@ -1,0 +1,49 @@
+---
+/**
+ * The 15 October 2026 package's own footer, for the nine /programmes/ pages
+ * (staging branch feat/programme-pathways; must not merge). Its markup is the
+ * package's; its styles are section 5 of templates/programme-package.css,
+ * scoped to #pkg-footer.
+ *
+ * ⚠ Like PackageHeader.astro, this departs from CLAUDE.md's "ONE LOCKUP ON
+ * EVERY PAGE", and it drops the site footer's links to the policies, cookie
+ * choices, resources and the cohort. The user asked for the package's look on
+ * 15 October; it is on staging only, and both have to be settled with Sunil
+ * before anything like it ships.
+ */
+import { PATHWAY_NAMES } from '../../data/programme-offers';
+import { CONTACT_EMAIL } from '../../data/site';
+
+export interface Props {
+  /** Which of the three links is the current page, if any. */
+  current?: 'hub' | 'agentic-systems' | 'career-preparation';
+}
+
+const { current } = Astro.props;
+
+const links: { key: Props['current']; href: string; label: string }[] = [
+  { key: 'hub', href: '/programmes/', label: 'Programmes' },
+  { key: 'agentic-systems', href: '/programmes/agentic-systems/', label: PATHWAY_NAMES['agentic-systems'] },
+  { key: 'career-preparation', href: '/programmes/career-preparation/', label: 'Career Preparation' },
+];
+---
+
+<footer class="site-footer" id="pkg-footer">
+  <a class="brand" href="/programmes/" aria-label="The Living Craft programmes">
+    <span class="brand-mark">
+      <img src="/programmes/logo.webp" alt="" width="82" height="82" />
+    </span>
+    <span>The Living Craft</span>
+  </a>
+  <p>Practical learning with Sunil Mathew.</p>
+  <nav aria-label="Footer">
+    {
+      links.map((l) => (
+        <a href={l.href} aria-current={l.key === current ? 'page' : undefined}>
+          {l.label}
+        </a>
+      ))
+    }
+  </nav>
+  <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+</footer>

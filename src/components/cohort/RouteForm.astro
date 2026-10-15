@@ -119,6 +119,32 @@ export interface Props {
   flat?: boolean;
   /** The submit button's words. Falls back to the definition's action. */
   action?: string;
+  /**
+   * Free-text choice fields (the role) drawn as a plain text box instead of
+   * the list. The server already accepts typed words for them.
+   */
+  asText?: string[];
+  /** The empty first option of every list. */
+  prompt?: string;
+  /**
+   * A required tick with these words, above the button. It only gates the
+   * browser's submit and is not sent: the person is asking to be contacted
+   * about this enquiry by sending it. It is not the marketing permission.
+   */
+  agree?: string;
+  /**
+   * The note under the button, as a closed disclosure with these words,
+   * instead of the default sentence.
+   */
+  privacy?: { summary: string; text: string };
+  /**
+   * Required fields this page asks in one box: { target: source } sends the
+   * source field's answer under the target's name as well, and the target is
+   * not drawn. Both get exactly what the person typed.
+   */
+  mirror?: Record<string, string>;
+  /** Rows for every text area, instead of the definition's. */
+  rows?: number;
 }
 
 const {
@@ -139,6 +165,12 @@ const {
   hints = true,
   flat = false,
   action,
+  asText = [],
+  prompt = 'Choose one',
+  agree,
+  privacy,
+  mirror = {},
+  rows,
 } = Astro.props;
 
 const definition = FORMS[route];
@@ -162,7 +194,7 @@ const rank = (name: string) => {
 const form: FormDefinition = {
   ...definition,
   fields: definition.fields
-    .filter((f) => !omit.includes(f.name) && !(f.name in fixed))
+    .filter((f) => !omit.includes(f.name) && !(f.name in fixed) && !(f.name in mirror))
     .flatMap((f): Field[] => {
       let shown = f;
       if (f.pageOnly) {
@@ -215,6 +247,7 @@ const renderField = (field: Field) => {
   data-notify={isApplyConfigured ? APPLY_ACCESS_KEY : undefined}
   data-step-count={effectiveSteps.length}
   data-labels={Object.keys(labels).length ? JSON.stringify(labels) : undefined}
+  data-mirror={Object.keys(mirror).length ? JSON.stringify(mirror) : undefined}
   novalidate
 >
   {
@@ -261,7 +294,7 @@ const renderField = (field: Field) => {
                 // RoleField draws both labels; the hint and the error keep the
                 // ids the script looks up, so the errors land where they do
                 // for every other field.
-                if (field.kind === 'choice' && field.freeText) {
+                if (field.kind === 'choice' && field.freeText && !asText.includes(field.name)) {
                   return (
                     <RoleField id={fieldId} name={field.name} required={field.required} labelClass="full" describedBy={describedBy}>
                       <span slot="label" class="rf-label">
@@ -294,19 +327,19 @@ const renderField = (field: Field) => {
                       <textarea
                         id={fieldId}
                         name={field.name}
-                        rows={field.rows ?? 4}
+                        rows={rows ?? field.rows ?? 4}
                         maxlength={field.max}
                         required={field.required}
                         aria-describedby={describedBy || undefined}
                       />
-                    ) : field.kind === 'choice' ? (
+                    ) : field.kind === 'choice' && !asText.includes(field.name) ? (
                       <select
                         id={fieldId}
                         name={field.name}
                         required={field.required}
                         aria-describedby={describedBy || undefined}
                       >
-                        <option value="">Choose one</option>
+                        <option value="">{prompt}</option>
                         {field.options?.map((o) => (
                           <option value={o.value} selected={preset[field.name] === o.value}>
                             {o.label}
@@ -365,6 +398,25 @@ const renderField = (field: Field) => {
             )
           }
 
+          {
+            isLast && agree && (
+              <div class="rf-agree">
+                <label class="consent" for={`${id}-contact_agree`}>
+                  <input
+                    type="checkbox"
+                    id={`${id}-contact_agree`}
+                    name="contact_agree"
+                    value="yes"
+                    required
+                    aria-describedby={`${id}-contact_agree-err`}
+                  />
+                  <span>{agree}</span>
+                </label>
+                <span class="rf-err" id={`${id}-contact_agree-err`} hidden />
+              </div>
+            )
+          }
+
           <div class="rf-step-actions">
             {i > 0 && (
               <button type="button" class="btn btn-ghost rf-back" data-step-back>
@@ -395,11 +447,22 @@ const renderField = (field: Field) => {
       step is showing. */}
   <p class="form-status" data-status role="status" aria-live="polite"></p>
 
-  <p class="rf-privacy">
-    We use what you write here to reply to you and to prepare the fit
-    conversation. Nothing else.
-    <a href="/privacy">How your details are handled</a>.
-  </p>
+  {
+    privacy ? (
+      <details class="privacy-note">
+        <summary>{privacy.summary}</summary>
+        <p>
+          {privacy.text} <a href="/privacy">How your details are handled</a>.
+        </p>
+      </details>
+    ) : (
+      <p class="rf-privacy">
+        We use what you write here to reply to you and to prepare the fit
+        conversation. Nothing else.
+        <a href="/privacy">How your details are handled</a>.
+      </p>
+    )
+  }
 </form>
 
 <style>
@@ -659,9 +722,9 @@ const renderField = (field: Field) => {
     };
 
     const clearErrors = () => {
-      definition.fields.forEach((f) => {
-        const el = fieldEl(f.name);
-        const err = errEl(f.name);
+      [...definition.fields.map((f) => f.name), 'contact_agree'].forEach((name) => {
+        const el = fieldEl(name);
+        const err = errEl(name);
         if (el) el.removeAttribute('aria-invalid');
         if (err) {
           err.textContent = '';
@@ -669,6 +732,18 @@ const renderField = (field: Field) => {
         }
       });
     };
+
+    /** RouteForm's `mirror`: { target: source }, one box sent under both names. */
+    const mirror: Record<string, string> = (() => {
+      try {
+        return JSON.parse(form.dataset.mirror ?? '{}');
+      } catch {
+        return {};
+      }
+    })();
+
+    /** RouteForm's `agree`: the tick that has to be on before this can be sent. */
+    const agreeBox = form.querySelector<HTMLInputElement>('input[name="contact_agree"]');
 
     /**
      * A page's own words for a field (RouteForm's `labels`). An error beside a
@@ -886,11 +961,24 @@ const renderField = (field: Field) => {
       definition.fields.forEach((f) => {
         input[f.name] = data.get(f.name) ?? '';
       });
+      Object.entries(mirror).forEach(([target, source]) => {
+        input[target] = input[source];
+      });
 
       // The same rules the server runs, run here first — so an obvious typo
       // costs no round trip. The server is still the one that decides; this is
-      // a convenience, never the validation.
-      const { errors } = validate(route, input);
+      // a convenience, never the validation. A mirrored field's error is the
+      // same as its source's, which is already shown beside the box.
+      const errors: { field: string; code: string; message: string }[] = validate(route, input).errors.filter(
+        (e) => !(e.field in mirror),
+      );
+      if (agreeBox && !agreeBox.checked) {
+        errors.push({
+          field: 'contact_agree',
+          code: 'required',
+          message: 'Tick this box to agree to be contacted about this enquiry.',
+        });
+      }
       if (errors.length) {
         showErrors(errors);
         return;

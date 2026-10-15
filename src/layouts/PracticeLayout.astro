@@ -124,7 +124,9 @@ const isTool = bodyClass === 'tool-page';
       <slot />
     </main>
 
-    <SiteFooter />
+    {/* The same for the footer: only the /programmes/ pages bring their own
+        (PackageFooter.astro, staging only). */}
+    {Astro.slots.has('footer') ? <slot name="footer" /> : <SiteFooter />}
 
     <Track />
     {stickyApply && <StickyApplyBar />}

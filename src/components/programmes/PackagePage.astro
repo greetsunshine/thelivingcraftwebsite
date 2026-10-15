@@ -4,9 +4,9 @@
  * landing-page package (staging branch feat/programme-pathways; must not
  * merge).
  *
- * The header is the package's own (PackageHeader.astro), at the user's request
- * on 15 October; that departs from CLAUDE.md's one-lockup rule and is staging
- * only. The footer is still the site's. Inside <main>, the page is the
+ * The header and the footer are the package's own (PackageHeader.astro,
+ * PackageFooter.astro), at the user's request on 15 October; that departs from
+ * CLAUDE.md's one-lockup rule and is staging only. Inside <main>, the page is the
  * package's markup under #pkg, styled by the package's own stylesheet
  * (templates/programme-package.css), which is imported nowhere else.
  *
@@ -16,6 +16,7 @@
 import '../../styles/templates/programme-package.css';
 import PracticeLayout from '../../layouts/PracticeLayout.astro';
 import PackageHeader from './PackageHeader.astro';
+import PackageFooter from './PackageFooter.astro';
 import { SITE_ORIGIN } from '../../data/facts';
 
 export interface Props {
@@ -72,4 +73,5 @@ const schema = [
   <div id="pkg" class="pkg">
     <slot />
   </div>
+  <PackageFooter slot="footer" current={current} />
 </PracticeLayout>
