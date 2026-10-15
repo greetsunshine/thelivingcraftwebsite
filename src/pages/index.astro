@@ -28,6 +28,15 @@ import { regions } from '../data/regions';
 
 export const prerender = false;
 
+// STAGING ONLY (branch feat/programme-pathways, never merge). The user asked on
+// 15 October for `/` to open the programme pages here. A temporary redirect
+// (302), keeping the query string, so a campaign link's utm tags survive. On
+// this branch the cohort page below is therefore not reachable at `/`.
+// Production is untouched: this file on `main` has no redirect.
+if (Astro.url.pathname === '/') {
+  return Astro.redirect(`/programmes/${Astro.url.search}`, 302);
+}
+
 const VALID = ['india', 'dubai', 'australia'] as const;
 type Key = (typeof VALID)[number];
 
