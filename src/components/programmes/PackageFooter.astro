@@ -2,8 +2,8 @@
 /**
  * The 15 October 2026 package's own footer, for the nine /programmes/ pages
  * (staging branch feat/programme-pathways; must not merge). Its markup is the
- * package's; its styles are section 5 of templates/programme-package.css,
- * scoped to #pkg-footer.
+ * package's; its styles are in templates/programme-chrome.css, scoped to
+ * #pkg-footer.
  *
  * ⚠ Like PackageHeader.astro, this departs from CLAUDE.md's "ONE LOCKUP ON
  * EVERY PAGE", and it drops the site footer's links to the policies, cookie
@@ -11,6 +11,7 @@
  * 15 October; it is on staging only, and both have to be settled with Sunil
  * before anything like it ships.
  */
+import '../../styles/templates/programme-chrome.css';
 import { PATHWAY_NAMES } from '../../data/programme-offers';
 import { CONTACT_EMAIL } from '../../data/site';
 

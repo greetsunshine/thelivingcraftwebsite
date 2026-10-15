@@ -2,8 +2,9 @@
 /**
  * The 15 October 2026 package's own header, for the nine /programmes/ pages
  * (staging branch feat/programme-pathways; must not merge). Its markup and
- * menu behaviour are the package's; its styles are section 4 of
- * templates/programme-package.css, scoped to #pkg-header.
+ * menu behaviour are the package's; its styles are in
+ * templates/programme-chrome.css, scoped to #pkg-header, which it imports
+ * itself so any page can use it (/privacy and /terms do, through PolicyLayout).
  *
  * ⚠ This departs from CLAUDE.md's "ONE LOCKUP ON EVERY PAGE": the package draws
  * its brand from its own logo.webp beside set type, not BrandLockup.astro. The
@@ -13,6 +14,7 @@
  * Three links and one button, exactly as the package has them. The site's
  * own sections (Advisory, Resources, Tools, About) are not in it.
  */
+import '../../styles/templates/programme-chrome.css';
 import { PATHWAY_NAMES } from '../../data/programme-offers';
 
 export interface Props {

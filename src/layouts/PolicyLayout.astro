@@ -20,20 +20,24 @@ import '../styles/global.css';
 // type, footer. A page template loads after it and refines it.
 import '../styles/ds/site-v5.css';
 import SeoHead from '../components/SeoHead.astro';
-import SiteHeader from '../components/site/SiteHeader.astro';
-import SiteFooter from '../components/site/SiteFooter.astro';
+// STAGING ONLY (feat/programme-pathways, never merge): the user asked on 15
+// October for /privacy and /terms to carry the programme pages' header and
+// footer (the 15 October package's). `main` still uses SiteHeader and
+// SiteFooter here. The package's footer has no Privacy, Terms or Cookie
+// choices links; the pages themselves are those destinations.
+import PackageHeader from '../components/programmes/PackageHeader.astro';
+import PackageFooter from '../components/programmes/PackageFooter.astro';
 
 export interface Props {
   title: string;
   description?: string;
   canonical?: string;
-  /** Which policy this is. Shown beside the wordmark and in the footer rule. */
+  /** Which policy this is. Unused while the package header is on (staging only). */
   label: string;
 }
 
 const { title, description, canonical, label } = Astro.props;
-// The current policy is marked by SiteHeader (aria-current), in the row under
-// the header. There is no action button here: a policy page asks nothing.
+// The package header's Enquire button goes to the programmes hub's enquiry form.
 // <body> takes `lc-v5` (V5's chrome) and `lc-v5-read` (V5's reading type):
 // see ds/site-v5.css. Comments stay up here: a JSX comment between </head>
 // and <body> makes Astro open an implicit <body> and loses these classes.
@@ -46,21 +50,12 @@ const { title, description, canonical, label } = Astro.props;
   </head>
   <body class="lc-v5 lc-v5-read">
     <a class="skip" href="#main">Skip to content</a>
-    <SiteHeader
-      sub={label}
-      related={[
-        ['Privacy', '/privacy'],
-        ['Terms', '/terms'],
-        ['Cohort', '/'],
-        ['Fractional CAIO', '/caio'],
-        ['AI Readiness', '/assessment'],
-      ]}
-    />
+    <PackageHeader cta="Enquire" ctaHref="/programmes/#tell-us-what-you-want-to-achieve" />
 
     <main id="main">
       <slot />
     </main>
 
-    <SiteFooter />
+    <PackageFooter />
   </body>
 </html>
