@@ -350,6 +350,28 @@ export const resources: Resource[] = [
     url: '/resources/gate-routing-map',
     publishedAt: '2026-10-11',
   },
+  {
+    id: 'change-authority-review',
+    topic: 'Change Authority',
+    number: '11',
+    series: 'Agentic system design',
+    title: 'The Change Authority Review',
+    kind: 'Excel workbook · 3 working tabs · 10 checks · 1 worked example',
+    summary:
+      'What may the agent do, and who gives it the authority to do it? A workbook that gives every change an agent can make an authority level.',
+    description:
+      'Access is a permission granted once: if the agent can call the API, it can write. Authority is a decision about each change: may the agent make this change, now, for this person? Teams merge the two because the code path is the same. The workbook pulls them apart. It lists every action an agent with write access can take, marks each one by what an undo actually leaves behind rather than by whether an undo button exists, and gives each action one of three authority levels (Agent acts, Preview and consent or Not allowed). It then checks that each level has what it needs and scores ten checks, four of them critical, to one decision: Ready, Fix first or Hold, with the next thing to fix named. The worked example is an illustrative agent that drafts and edits a shared document: 9 actions, 4 not ready, including a version save whose preview never said the version stays in the history, and the decision was Hold.',
+    useFor: [
+      'Mark every action from a real undo attempt, and record what the history, notifications and other people still show',
+      'Require a preview and a per-change consent for every action that cannot be fully undone or that others see',
+      'Check that each preview shows the full change and says what cannot be undone',
+      'Remove access the agent does not need, rather than leaving it unused',
+    ],
+    format:
+      'Excel workbook, which also opens in Google Sheets and LibreOffice. It asks for a name, a role and an email address before it downloads.',
+    url: '/resources/change-authority-review',
+    publishedAt: '2026-10-17',
+  },
 ];
 
 /**

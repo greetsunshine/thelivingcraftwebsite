@@ -457,7 +457,19 @@ export const RESOURCE_TEMPLATES: readonly PackageTemplate[] = [
     version: RESOURCE_TOOLS_REVISION,
   },
 
-  // The Citation Fit Check and the Gate Routing Map: held wordings, unapproved.
+  // The Citation Fit Check, the Gate Routing Map and the Change Authority
+  // Review: held wordings, unapproved.
+  {
+    key: 'resource-change-authority-review',
+    route: 'resource',
+    dayOffset: 0,
+    purpose: 'transactional',
+    subject: 'The Change Authority Review',
+    body:
+      'Here is the Change Authority Review you asked for.\n\nhttps://learning.thelivingcraft.ai/resources/change-authority-review\n\nIt helps you decide what an agent with write access may do, and who gives it the authority to do each change. Three tabs list every action and what its undo really leaves behind, give each action an authority level (Agent acts, Preview and consent or Not allowed), check that each level has what it needs, and score ten checks to a decision of Ready, Fix first or Hold. The worked example is on its own tab.\n\nYou asked for this tool and nothing else was started. If you would like to ask something about the cohort, reply to this email.\n\nThe Living Craft',
+    actions: [],
+    version: RESOURCE_TOOLS_REVISION,
+  },
   {
     key: 'resource-gate-routing-map',
     route: 'resource',

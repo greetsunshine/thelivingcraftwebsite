@@ -8,7 +8,7 @@ Keep it current. Update it whenever you finish something or discover something t
 cost the next session an hour to rediscover. It is short on purpose — the detail lives in
 `build-status.md` and in the code comments.
 
-**Last updated:** 13 October 2026
+**Last updated:** 17 October 2026
 **Funnel steps, 12 October (`console/funnel-step-detail`):** each funnel row now opens `/craft/admin/traffic/step`. It needs the new `admin_step_detail()`: **run `supabase/schema.sql` before merging.** **Run the copy from `main` or from this PR's branch, never from an older branch.** On 12 October the week-4 branch's stale copy was run and put the pre-#63 `admin_funnel()` back on production; every statement in the file is `create or replace`, so an old copy silently reverts newer functions. PR #63 below is merged.
 **Console funnel, 12 October:** application starts now have their own row on `/craft/admin/traffic`. `admin_funnel()` changed and a per-page view (`/craft/admin/traffic/page`) with its rollup `admin_page_detail()` was added. The schema ran on production on 12 October, **but the PR #63 review fixes changed it again (new `admin_event_key()`, two functions rewritten): run `supabase/schema.sql` once more before merging.** **"Started a tool: 0" is a true count, not a fault** (checked 12 October): headless Chrome on the live poc-screen sent `tool_started` on the first click, and a tagged beacon was stored and then deleted. The event only exists since 29 September, and the tool pages had 29 views from then to 12 October.
 **Teaching work now:** the six-week plan merged as PR #54, and week 4 merged as PR #57.
@@ -20,6 +20,35 @@ Its schema ran on production on 7 October, but the 8 October review fixes added 
 merged. The pipeline work is `feat/cohort-pipeline` (PR #7), stacked on
 `feat/learner-dashboard-poc` (PR #6).
 **Source of record:** [`docs/Website Rebuild 10-09-2026/`](../Website%20Rebuild%2010-09-2026/)
+
+---
+
+## Change Authority Review — 17 October (`add-change-authority-review`)
+
+A new tool, built from Sunil's "Authority Review" brief: an Excel workbook that gives every
+action an agent with write access can take one of three authority levels (Agent acts, Preview
+and consent, Not allowed), and its page at `/resources/change-authority-review`. **Listed,
+not featured**: a row in `resources.ts` (Agentic system design 11), none in
+`resource-choices.ts`. Sunil asked for it on the resources page, which overrode the brief's
+"do not publish". **It ships as a PR, not merged**, at Sunil's choice.
+`tools/change-authority-review/README.md` has the rebuild steps and decisions.
+
+- **Renamed from the brief.** "Authority Review" would sit beside the existing "Agent
+  Authority Review" (`/resources/agent-authority-review`, a different question: which
+  workflow steps an agent may own). Sunil chose "Change Authority Review" on 17 October. The
+  new page links to the older one once.
+- **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 101 of 101, every acceptance
+  figure in the brief, the five variants and the four edge cases. `npm test` 223 of 223.
+  `astro check` 0 errors. At a true 375px viewport the page has no horizontal scroll.
+- **Download gate kept**, as for the three tools before it, although the brief said "no
+  email gate".
+- **Screenshots without touching production.** `npm run dev` here writes real rows, because
+  `.env.local` holds production keys. The page was rendered from a git worktree with no
+  `.env.local` and an APFS clone of `node_modules` (`cp -cR`; a symlink breaks Astro's
+  paths). Headless Chrome will not go below about 500px wide, so a 375px shot needs the page
+  inside a 375px iframe.
+- **Still open:** the held delivery email `resource-change-authority-review` is unapproved;
+  not in the follow-up catalogue; the comment keyword AUTHORITY may clash with the older tool.
 
 ---
 

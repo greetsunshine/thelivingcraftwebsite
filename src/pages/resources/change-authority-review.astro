@@ -1,0 +1,538 @@
+---
+/**
+ * /resources/change-authority-review — the Change Authority Review.
+ *
+ * A workbook for engineers who give agents write access to artifacts and
+ * systems. It answers one question: what may the agent do, and who gives it
+ * the authority to do it? Access is a permission granted once; authority is a
+ * decision about each change. The workbook pulls the two apart.
+ *
+ * The brief called it "Authority Review" at /resources/authority-review. It was
+ * renamed on 17 October 2026, at Sunil's choice, because
+ * /resources/agent-authority-review already exists and answers a different
+ * question. The page says so once, near the foot (SIBLING).
+ *
+ * The tool is the Excel workbook. This page describes it and hands it over.
+ * Every word the page and the workbook share comes from
+ * src/data/change-authority-review.ts; every figure in the worked example is
+ * computed by src/lib/changeAuthority.ts, so the page cannot print a number the
+ * workbook would not produce (tools/change-authority-review/verify_xlsx.py).
+ *
+ * THE DOWNLOAD IS GATED, although the brief said "no email gate". CLAUDE.md,
+ * "The download gate" (decided 19 September 2026), puts every file a resource
+ * page hands out behind ResourceGate, and the file lives in downloads/, which
+ * is not a public URL. Sunil confirmed the gate for the Rework Cost Check and
+ * the Citation Fit Check when their briefs said the same, and the Gate Routing
+ * Map kept it on the same reasoning.
+ *
+ * Released 17 October 2026. The row in src/data/resources.ts is what lists it
+ * on /resources, the sitemap and /llms.txt, and what lets the gate hand the
+ * file over. Not featured, so there is no row in resource-choices.ts.
+ */
+import ResourcesLayout from '../../layouts/ResourcesLayout.astro';
+import ClosingCta from '../../components/site/ClosingCta.astro';
+import CohortIntroLink from '../../components/site/CohortIntroLink.astro';
+import ResourceCredit from '../../components/ResourceCredit.astro';
+import ResourceGate from '../../components/ResourceGate.astro';
+import { SITE_ORIGIN } from '../../data/facts';
+import { longDate } from '../../data/resources';
+import {
+  CHECKS,
+  DECISION_MEANING,
+  READY_AT,
+  MAX_TOTAL,
+  WHY as NOT_READY,
+  authorityReadiness,
+  checklistResult,
+  finalAuthority,
+  inventorySummary,
+  requirementsSummary,
+  suggestedAuthority,
+} from '../../lib/changeAuthority';
+import {
+  RESOURCE_ID,
+  TITLE,
+  TAGLINE,
+  BRING,
+  DO,
+  LEAVE,
+  WHY,
+  ACCESS,
+  AUTHORITY,
+  FINDING,
+  AUTHORITY_TABLE,
+  UNDO_TABLE,
+  TABS,
+  EXAMPLE_LABEL,
+  EXAMPLE_ACTIONS,
+  EXAMPLE_REQUIREMENTS,
+  EXAMPLE_ANSWERS,
+  EXAMPLE_VERSION_ROW,
+  EXAMPLE_RENAME_ROW,
+  CLOSING,
+  SIBLING,
+  LICENCE_LINE,
+  PUBLISHED_AT,
+  DOWNLOAD_KIND,
+} from '../../data/change-authority-review';
+
+const canonical = `/resources/${RESOURCE_ID}`;
+const url = `${SITE_ORIGIN}${canonical}`;
+
+// The promises the page makes in words. A wrong count fails the first render.
+const critical = CHECKS.filter((c) => c.critical);
+if (CHECKS.length !== 10) throw new Error(`change authority review: ${CHECKS.length} checks, promised 10`);
+if (critical.length !== 4) throw new Error(`change authority review: ${critical.length} critical checks, promised 4`);
+if (TABS.length !== 3) throw new Error(`change authority review: ${TABS.length} tabs, promised 3`);
+
+// The worked example, read through the same module the tests and the workbook verifier use.
+const exInv = inventorySummary(EXAMPLE_ACTIONS);
+const exReq = requirementsSummary(EXAMPLE_ACTIONS, EXAMPLE_REQUIREMENTS);
+const exResult = checklistResult(EXAMPLE_ANSWERS);
+const exRows = EXAMPLE_ACTIONS.map((a, i) => ({
+  name: a.name,
+  authority: finalAuthority(a),
+  suggested: suggestedAuthority(a),
+  ...authorityReadiness(finalAuthority(a), a.tested, EXAMPLE_REQUIREMENTS[i]),
+}));
+// The two rows the brief singles out. Each is checked here, so a change to the
+// example that breaks the sentence about it fails the render instead.
+const versionRow = exRows[EXAMPLE_VERSION_ROW];
+const renameRow = exRows[EXAMPLE_RENAME_ROW];
+if (versionRow.why !== NOT_READY.previewHidesIrreversible)
+  throw new Error('change authority review: the version-save row no longer fails on its preview');
+if (!(renameRow.ready && renameRow.authority === 'Agent acts' && renameRow.suggested === 'Preview and consent'))
+  throw new Error('change authority review: the rename row is no longer a ready Agent acts that needed consent');
+const otherNotReady = exRows.filter((r, i) => r.ready === false && i !== EXAMPLE_VERSION_ROW);
+const listJoin = (xs: (string | number)[]) =>
+  xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
+
+const title = `${TITLE} — what may the agent do, and who authorises it? · The Living Craft`;
+// Under 155 characters.
+const description =
+  'A workbook for agents with write access: mark what each undo really leaves behind, give every action an authority level, and decide if it is ready.';
+
+const schema = [
+  {
+    '@type': 'HowTo',
+    '@id': `${url}#howto`,
+    name: TITLE,
+    description,
+    url,
+    author: { '@id': `${SITE_ORIGIN}/#person` },
+    datePublished: PUBLISHED_AT,
+    isAccessibleForFree: true,
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    step: TABS.map((t, i) => ({ '@type': 'HowToStep', position: i + 1, name: t.name, text: t.ask })),
+  },
+];
+
+const sections = [
+  { id: 'why', title: 'Why' },
+  { id: 'levels', title: 'The three levels' },
+  { id: 'tabs', title: 'The three tabs' },
+  { id: 'checks', title: '10 checks' },
+  { id: 'example', title: 'Worked example' },
+];
+
+const levelClass = (x: string) => `level level-${x.toLowerCase().replace(/\s+/g, '-')}`;
+---
+
+<ResourcesLayout title={title} description={description} canonical={canonical} schema={schema} sections={sections} howTo="opening">
+  <!-- Hero: title, tagline, author, then what to bring, do and leave with, then the action. -->
+  <section class="hero" id="top" style="border-top:0">
+    <div class="wrap">
+      <div class="eyebrow">
+        <a href="/resources" class="crumb">Resources</a>
+        <span class="num">/ agentic system design</span>
+      </div>
+      <h1>{TITLE}</h1>
+      <p class="lead">{TAGLINE}</p>
+      <ResourceCredit />
+
+      <dl class="opening" id="opening">
+        <div class="open-row">
+          <dt class="mono">What to bring</dt>
+          <dd>{BRING}</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What to do</dt>
+          <dd>{DO}</dd>
+        </div>
+        <div class="open-row">
+          <dt class="mono">What you leave with</dt>
+          <dd>{LEAVE}</dd>
+        </div>
+      </dl>
+
+      <p class="hero-cta controls">
+        <button class="btn btn-primary" type="button" data-gate={DOWNLOAD_KIND} data-download={DOWNLOAD_KIND}>
+          Use the Change Authority Review&nbsp;<span class="arrow" aria-hidden="true">→</span>
+        </button>
+      </p>
+      <p class="hero-note mono">Excel workbook · also opens in Google Sheets and LibreOffice · free</p>
+      <CohortIntroLink />
+    </div>
+  </section>
+
+  <!-- Why this exists, then access is not authority -->
+  <section id="why">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Why this exists</span>
+        <h2>Access is not authority. <em>Teams merge the two because the code path is the same.</em></h2>
+      </div>
+      <div class="prose">
+        <p>{WHY}</p>
+        <p class="pair"><strong>{ACCESS}</strong> <strong>{AUTHORITY}</strong></p>
+        <p>{FINDING}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The three authority levels, how reversibility is classified, and the three questions -->
+  <section id="levels">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">The three authority levels</span>
+        <h2>Every action gets one, <em>and each level needs something before the agent may act</em>.</h2>
+      </div>
+      <div class="scroll" tabindex="0" role="region" aria-label="The three authority levels">
+        <table class="grid stack">
+          <thead>
+            <tr>
+              <th>Authority</th>
+              <th>Use it when</th>
+              <th>What it needs before the agent may act</th>
+            </tr>
+          </thead>
+          <tbody>
+            {AUTHORITY_TABLE.map((r) => (
+              <tr>
+                <td class="cname"><span class={levelClass(r.authority)}>{r.authority}</span></td>
+                <td data-label="Use it when">{r.when}</td>
+                <td data-label="What it needs before the agent may act">{r.needs}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">Can it be undone?</h3>
+      <p class="prose-lead">You fill this in for each action, from a real undo attempt.</p>
+      <div class="scroll" tabindex="0" role="region" aria-label="How reversibility is classified">
+        <table class="grid stack">
+          <thead>
+            <tr>
+              <th>Answer</th>
+              <th>Meaning</th>
+              <th>Example</th>
+            </tr>
+          </thead>
+          <tbody>
+            {UNDO_TABLE.map((r) => (
+              <tr>
+                <td class="cname">{r.answer}</td>
+                <td data-label="Meaning">{r.meaning}</td>
+                <td data-label="Example">{r.example}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="sub">The three questions</h3>
+      <div class="scroll" tabindex="0" role="region" aria-label="The three questions, one per tab">
+        <table class="grid questions">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Question</th>
+              <th>Tab</th>
+            </tr>
+          </thead>
+          <tbody>
+            {TABS.map((t, i) => (
+              <tr>
+                <td class="tn mono">{i + 1}</td>
+                <td class="cname">{t.ask}</td>
+                <td class="mono tabname">{t.sheet}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 01 to 03, one per tab: what it asks, and the one mistake it catches -->
+  <section id="tabs">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">The three tabs</span>
+        <h2>One question each, <em>and the mistake it catches</em>.</h2>
+      </div>
+      <div class="threegrid">
+        {TABS.map((t) => (
+          <div class="three" id={`tab-${t.n}`}>
+            <span class="threename mono">{t.n} · {t.name}</span>
+            <p class="threeask">{t.ask}</p>
+            <p class="qflag"><span class="flaglbl mono">The mistake it catches</span> {t.catches}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- The ten checks -->
+  <section id="checks">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">The {CHECKS.length} checks</span>
+        <h2>Four are critical. <em>One No on any of them is a Hold.</em></h2>
+      </div>
+      <p class="prose-lead">
+        Each check is answered Yes, Partial or No, and scores 2, 1 or 0. A No on any check marked critical
+        means Hold. Otherwise {READY_AT} or more out of {MAX_TOTAL}, with every critical check answered Yes, is
+        Ready. Anything less is Fix first.
+      </p>
+      <ol class="qs">
+        {CHECKS.map((c) => (
+          <li>
+            <span class="qn mono">{String(c.n).padStart(2, '0')}</span>
+            <div>
+              <p class="qask">
+                {c.critical && <span class="tag">Critical</span>}
+                {c.text}
+              </p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  </section>
+
+  <!-- The worked example -->
+  <section id="example">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Worked example · Illustrative</span>
+        <h2>A document-editing agent, <em>held</em>.</h2>
+      </div>
+      <p class="prose-lead">{EXAMPLE_LABEL} It is filled in on the workbook’s last tab.</p>
+      <div class="threegrid">
+        <div class="three">
+          <span class="threename mono">Actions</span>
+          <p class="threeask">{exInv.listed}</p>
+          <p class="threebody">
+            {exInv.byAuthority['Agent acts']} Agent acts, {exInv.byAuthority['Preview and consent']} Preview and consent and {exInv.byAuthority['Not allowed']} Not allowed.
+            {` ${exInv.overrides} were moved off the suggested authority.`}
+            {` One of them, “${renameRow.name}”, lets the agent act alone on a change other people see. Its authority is ready, but it is the wrong authority, and only check 3 catches it.`}
+          </p>
+        </div>
+        <div class="three">
+          <span class="threename mono">Not ready</span>
+          <p class="threeask">{exReq.notReady}</p>
+          <p class="threebody">
+            One is “{versionRow.name}”. It needs consent, and its preview never tells the user that the version stays in the history after a rollback.
+          </p>
+          <ul class="whylist">
+            {otherNotReady.map((r) => <li>{r.name}: {r.why.toLowerCase()}.</li>)}
+          </ul>
+        </div>
+        <div class="three">
+          <span class="threename mono">Decision</span>
+          <p class="threeask">{exResult.decision}</p>
+          <p class="threebody">
+            {exResult.decision && DECISION_MEANING[exResult.decision]}
+            {exResult.criticalNo.length === 1 && ` Critical check ${exResult.criticalNo[0]} was answered No.`}
+            {exResult.criticalNo.length > 1 && ` Critical checks ${listJoin(exResult.criticalNo)} were answered No.`}
+            {` Total ${exResult.total} of ${MAX_TOTAL}.`}
+          </p>
+        </div>
+      </div>
+      {exResult.nextCheck && (
+        <p class="prose-note">
+          The first thing to fix is check {exResult.nextCheck.n}. {exResult.nextStep}
+        </p>
+      )}
+      <p class="prose-note">
+        A different question comes first: <a href={SIBLING.url}>{SIBLING.title}</a> {SIBLING.line}
+      </p>
+    </div>
+  </section>
+
+  <!-- Closing -->
+  <section class="final" id="close">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Closing</span>
+        <h2>{CLOSING}</h2>
+      </div>
+      <ClosingCta result>
+        <button slot="download" class="btn btn-ghost" type="button" data-gate={DOWNLOAD_KIND} data-download={DOWNLOAD_KIND}>Download the Change Authority Review&nbsp;<span class="arrow" aria-hidden="true">↓</span></button>
+      </ClosingCta>
+      <p class="mono faint pubdate">
+        Published {longDate(PUBLISHED_AT)} · {LICENCE_LINE} · © The Living Craft
+      </p>
+    </div>
+  </section>
+  <ResourceGate
+    resource={RESOURCE_ID}
+    lead="The workbook holds the three working tabs, blank, and a worked example of a document-editing agent on its own tab."
+  />
+</ResourcesLayout>
+
+<style>
+  /* The same rules the Agent Memory Audit Kit and the Gate Routing Map pages
+     carry under the same names. The one addition is the authority label, which
+     uses the theme's quiet fills and their inks, as the workbook does. */
+  .crumb { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .prose { max-width: var(--measure-prose); }
+  .prose p + p { margin-top: var(--space-4); }
+  .prose .pair strong { color: var(--text-loud); }
+  .prose-lead { color: var(--text-quiet); max-width: var(--measure-prose); margin-bottom: var(--space-5); }
+  .prose-note { font-size: var(--size-2); color: var(--text-quiet); max-width: var(--measure-prose); margin-top: var(--space-4); }
+  .prose-note a { color: var(--accent-ink-strong); text-decoration: underline; text-underline-offset: 3px; }
+  .pubdate { margin-top: var(--space-5); font-size: var(--size-1); }
+  .hero .controls { margin-top: var(--space-6); }
+
+  .sub {
+    margin: var(--space-7) 0 var(--space-3);
+    font-size: var(--size-6);
+    font-weight: var(--weight-heavy);
+    color: var(--text-loud);
+  }
+
+  /* ── the opening (rework-cost-check.astro) ────────────────────────────── */
+  .opening { display: grid; gap: var(--space-4); max-width: var(--measure-prose); margin-top: var(--space-6); }
+  .open-row { display: grid; gap: var(--space-1); }
+  @media (min-width: 720px) {
+    .opening { max-width: none; }
+    .open-row { grid-template-columns: 180px 1fr; gap: var(--space-5); align-items: start; }
+  }
+  .open-row dt { font-size: var(--size-1); color: var(--accent-ink); font-weight: var(--weight-strong); padding-top: 3px; }
+  .open-row dd { color: var(--text-body); max-width: var(--measure-prose); }
+
+  /* ── cards (agent-memory-audit-kit.astro, "the three questions") ──────── */
+  .threegrid { display: grid; gap: var(--space-4); }
+  @media (min-width: 860px) { .threegrid { grid-template-columns: repeat(3, 1fr); } }
+  .three {
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .threename { font-size: var(--size-1); color: var(--accent-ink-strong); font-weight: var(--weight-medium); }
+  .threeask { font-family: var(--font-heading); font-size: var(--size-6); font-weight: var(--weight-heavy); color: var(--text-loud); }
+  .threebody { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+
+  /* ── tables (agent-memory-audit-kit.astro) ────────────────────────────── */
+  .scroll { overflow-x: auto; border-radius: var(--radius-inner); }
+  .scroll:focus-visible { outline: var(--focus-w) solid var(--focus-ring); outline-offset: var(--focus-offset); }
+  table.grid { border-collapse: collapse; width: 100%; background: var(--surface-panel); }
+  .grid thead th {
+    background: var(--texture-forest);
+    color: var(--text-on-invert);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--size-1);
+    font-weight: var(--weight-medium);
+    padding: var(--space-3) var(--space-4);
+    vertical-align: bottom;
+  }
+  .grid tbody td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border-hair);
+    vertical-align: top;
+    font-size: var(--size-2);
+    color: var(--text-quiet);
+  }
+  .grid tbody tr:last-child td { border-bottom: 0; }
+  .cname { color: var(--text-body); font-weight: var(--weight-medium); min-width: 150px; }
+  .tn { color: var(--text-quiet); }
+  .tabname { white-space: nowrap; }
+  /* "2 · Authority Requirements" is wider than its column at 375px. */
+  @media (max-width: 719px) { .tabname { white-space: normal; } }
+  .tag {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--accent-ink-strong);
+    background: var(--accent-quiet);
+    border-radius: var(--radius-pill);
+    padding: 1px var(--space-2);
+    margin-right: var(--space-2);
+    vertical-align: 1px;
+  }
+
+  /* An authority label: the same quiet fill and ink as the workbook's authority
+     cells, and always the level's word, so the colour is never the only signal. */
+  .level {
+    display: inline-block;
+    font-weight: var(--weight-strong);
+    border-radius: var(--radius-pill);
+    padding: 2px var(--space-3);
+    white-space: nowrap;
+  }
+  .level-agent-acts { background: var(--info-quiet); color: var(--info); }
+  .level-preview-and-consent { background: var(--accent-quiet); color: var(--accent-ink); }
+  .level-not-allowed { background: var(--surface-hover); color: var(--text-quiet); }
+  /* On a phone a three-column table becomes one block per row. Three columns at
+     375px squeezed the third to a word a line (the Gate Routing Map found this). */
+  @media (max-width: 719px) {
+    .stack thead { display: none; }
+    .stack tr { display: block; padding: var(--space-4); border-bottom: 1px solid var(--border-hair); }
+    .stack tr:last-child { border-bottom: 0; }
+    .grid.stack tbody td { display: block; border: 0; padding: var(--space-2) 0 0; }
+    .stack td[data-label]::before {
+      content: attr(data-label);
+      display: block;
+      font-size: var(--size-1);
+      color: var(--accent-ink);
+      font-weight: var(--weight-strong);
+    }
+  }
+  .whylist { color: var(--text-quiet); font-size: var(--size-2); padding-left: var(--space-5); display: grid; gap: var(--space-1); }
+
+  /* ── the checks (agent-memory-audit-kit.astro, "the twelve questions") ── */
+  ol.qs { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); max-width: 860px; }
+  ol.qs li {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: var(--space-4);
+    align-items: start;
+    background: var(--surface-panel);
+    border-radius: var(--radius-inner);
+    box-shadow: var(--shadow-raise);
+    padding: var(--space-4) var(--space-5);
+  }
+  .qn { color: var(--text-quiet); font-size: var(--size-1); padding-top: 3px; }
+  .qask { color: var(--text-loud); font-weight: var(--weight-strong); }
+  .qflag { color: var(--text-quiet); font-size: var(--size-2); margin-top: var(--space-2); }
+  .flaglbl { color: var(--danger); font-size: 12px; margin-right: var(--space-2); }
+</style>
+
+<script>
+  // The beacon only, the same as the memory kit. A download is counted when
+  // the gate hands the file over, not when its button is clicked: the click
+  // only opens the dialog. If the beacon is absent nothing happens.
+  const RESOURCE = 'change-authority-review';
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (!target?.closest || typeof fn !== 'function') return;
+    if (target.closest('[data-apply]')) fn('cohort_apply_click', { resource: RESOURCE });
+  });
+
+  document.addEventListener('lc:download', (e) => {
+    const fn = (window as unknown as { lcTrack?: (t: string, m?: unknown) => void }).lcTrack;
+    if (typeof fn !== 'function') return;
+    const d = (e as CustomEvent<{ kind: string }>).detail;
+    fn('resource_download', { resource: RESOURCE, file: d.kind });
+  });
+</script>
