@@ -665,7 +665,7 @@ def start_tab(ws: Worksheet, d: dict):
     ws.add_image(img, "B2")
     ws.row_dimensions[2].height = 36
 
-    put(ws, "B4", d["title"], font=F_TITLE)
+    put(ws, "B4", d["fullTitle"], font=F_TITLE)
     ws.row_dimensions[4].height = 40
     for col in "BCD":
         ws[f"{col}4"].border = GOLD_RULE
@@ -794,7 +794,7 @@ def build() -> dict:
         ws.print_options.horizontalCentered = True
     start_tab(start, d)
 
-    wb.properties.title = d["title"]
+    wb.properties.title = d["fullTitle"]
     wb.properties.creator = d["credit"].removeprefix("Built by ")
     wb.properties.subject = d["tagline"]
     OUT.parent.mkdir(parents=True, exist_ok=True)

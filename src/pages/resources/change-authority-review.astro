@@ -52,6 +52,7 @@ import {
 import {
   RESOURCE_ID,
   TITLE,
+  FULL_TITLE,
   TAGLINE,
   BRING,
   DO,
@@ -107,7 +108,7 @@ const otherNotReady = exRows.filter((r, i) => r.ready === false && i !== EXAMPLE
 const listJoin = (xs: (string | number)[]) =>
   xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`;
 
-const title = `${TITLE} — what may the agent do, and who authorises it? · The Living Craft`;
+const title = `${FULL_TITLE} · The Living Craft`;
 // Under 155 characters.
 const description =
   'A workbook for agents with write access: mark what each undo really leaves behind, give every action an authority level, and decide if it is ready.';
@@ -146,7 +147,7 @@ const levelClass = (x: string) => `level level-${x.toLowerCase().replace(/\s+/g,
         <a href="/resources" class="crumb">Resources</a>
         <span class="num">/ agentic system design</span>
       </div>
-      <h1>{TITLE}</h1>
+      <h1>{FULL_TITLE}</h1>
       <p class="lead">{TAGLINE}</p>
       <ResourceCredit />
 

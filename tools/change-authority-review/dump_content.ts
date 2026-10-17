@@ -42,6 +42,7 @@ console.log(
   JSON.stringify(
     {
       title: C.TITLE,
+      fullTitle: C.FULL_TITLE,
       tagline: C.TAGLINE,
       question: C.QUESTION,
       bring: C.BRING,

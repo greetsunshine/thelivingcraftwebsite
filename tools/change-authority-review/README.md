@@ -10,7 +10,7 @@ the authority to do it?
 the sitemap and `/llms.txt` read, and what lets the download gate hand the file
 over. There is no row in `src/data/resource-choices.ts`, the featured
 question → action list at the top of `/resources`. Adding one is the whole of
-featuring it: "What may the agent do?" → "Use the Change Authority Review".
+featuring it: "What can the agent be allowed to change?" → "Use the Change Authority Review".
 
 **The name is not the brief's.** The brief said "Authority Review" at
 `/resources/authority-review`. `/resources/agent-authority-review` ("The Agent
@@ -117,7 +117,7 @@ from `src/data/resource-cohort-copy.ts`, which names the October 2026 cohort.
 ```
 Change Authority Review
 
-Reader question: What may the agent do?
+Reader question: What can the agent be allowed to change?
 Action verb: Use
 Status: Released 2026-10-17
 Featured in directory: No

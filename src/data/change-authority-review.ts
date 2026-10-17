@@ -21,7 +21,9 @@ import { EMPTY_REQUIREMENTS } from '../lib/changeAuthority.ts';
 export const RESOURCE_ID = 'change-authority-review';
 export const TITLE = 'Change Authority Review';
 export const TAGLINE = 'Your agent’s access says what it can do. Decide who gives it the authority to act.';
-export const QUESTION = 'What may the agent do, and who gives it the authority to do it?';
+export const QUESTION = 'What can the agent be allowed to change?';
+/** The heading on the page and the workbook's cover: the name, then the question (Sunil, 17 October 2026). */
+export const FULL_TITLE = `${TITLE} — ${QUESTION}`;
 
 /** Released on 17 October 2026. The resources.ts row carries the same date. */
 export const PUBLISHED_AT = '2026-10-17';
