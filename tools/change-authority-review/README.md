@@ -100,7 +100,8 @@ from `src/data/resource-cohort-copy.ts`, which names the October 2026 cohort.
   fall through to Ready.
 - **Every validation has `showErrorMessage` on.** openpyxl leaves it off, and
   then Excel accepts anything typed. The Gate Routing Map, Citation Fit Check
-  and Rework Cost Check builders still have it off (found 17 October 2026).
+  and Rework Cost Check builders had it off too; all three were fixed and
+  rebuilt in the same PR (#69, 17 October 2026).
 - **`npm test` fails if the workbook is stale.** It compares `refs.json`, which
   the build writes, with the checks, reasons and worked example in the
   TypeScript. Rebuild and commit both together.

@@ -40,9 +40,11 @@ not featured**: a row in `resources.ts` (Agentic system design 11), none in
 - **Verified.** `verify_xlsx.py` recalculates in LibreOffice: 105 of 105, every acceptance
   figure in the brief, the five variants, the four edge cases and one of ours. `npm test`
   224 of 224, including a test that fails if the committed workbook is stale.
-- **Found in review, not fixed here:** the Gate Routing Map, Citation Fit Check and Rework
-  Cost Check builders write dropdowns with `showErrorMessage` off, so Excel accepts any
-  typed value in those three live workbooks.
+- **Fixed in the same PR, found in its review:** the Gate Routing Map, Citation Fit Check and
+  Rework Cost Check builders wrote every dropdown with `showErrorMessage` off, so Excel
+  accepted any typed value. Each builder now switches it on for every validation at save;
+  all three rebuilt, `refs.json` unchanged, verifiers 87/87, 50/50 and 40/40. The Rework
+  Cost Check's verifier also needs `pip install formulas`.
   `astro check` 0 errors. At a true 375px viewport the page has no horizontal scroll.
 - **Download gate kept**, as for the three tools before it, although the brief said "no
   email gate".

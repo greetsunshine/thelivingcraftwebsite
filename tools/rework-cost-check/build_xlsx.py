@@ -938,6 +938,14 @@ def main() -> int:
         protect(ws)
 
     OUT.parent.mkdir(parents=True, exist_ok=True)
+    # Enforce every validation. openpyxl writes showErrorMessage off, and Excel
+    # then accepts anything typed into a dropdown cell (found 17 October 2026,
+    # PR #69 review). Set here, at save, so a rule added later is covered too.
+    for sheet in wb.worksheets:
+        for dv in sheet.data_validations.dataValidation:
+            dv.showErrorMessage = True
+            if not dv.error:
+                dv.error, dv.errorTitle = "Pick one of the options in the list.", "Not an option"
     wb.save(OUT)
     print(f"wrote {OUT.relative_to(REPO)}  ({OUT.stat().st_size:,} bytes)")
 
