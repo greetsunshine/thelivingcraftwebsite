@@ -207,6 +207,7 @@ class Lists:
             dv = DataValidation(type="list", formula1=f"${LIST_COL}${top}:${LIST_COL}${top + len(options) - 1}",
                                 allow_blank=True, showDropDown=False)
             dv.error, dv.errorTitle = "Pick one of the options in the list.", "Not an option"
+            dv.showErrorMessage = True   # openpyxl defaults to False, which accepts anything typed
             self.ws.add_data_validation(dv)
             self.made[key] = dv
         return self.made[key]
@@ -402,6 +403,7 @@ def requirements(ws, top: int, d: dict, lists: Lists, rows: list[dict] | None, l
         v = DataValidation(type="custom", formula1=f'$C{first}="{authority}"', allow_blank=True)
         v.error = f"This column is for {authority} actions. Change the authority on the Action Inventory first."
         v.errorTitle = "Not this authority"
+        v.showErrorMessage = True
         ws.add_data_validation(v)
         refuse[authority] = v
 
@@ -438,8 +440,10 @@ def requirements(ws, top: int, d: dict, lists: Lists, rows: list[dict] | None, l
                    f'IF({J}<>"Yes",{q(W["notActingAs"])},'
                    f'IF(AND({Kc}<>"Changes nothing",{Kc}<>"Revises and asks again"),{q(W["unsafeRefusal"])},""))))))')
         denied = f'IF({L}<>"Yes",{q(W["accessPresent"])},"")'
+        # A value that is none of the three (typed past a validation, or pasted)
+        # is never Ready: it names WHY.unknownAuthority instead of falling to "".
         calc(ws, f"N{r}", f'=IF({C}="","",IF({C}="{AA}",{agent},IF({C}="{PC}",{consent},'
-                          f'IF({C}="{NA}",{denied},""))))', font=F_BODY, align=WRAP_MID)
+                          f'IF({C}="{NA}",{denied},{q(W["unknownAuthority"])}))))', font=F_BODY, align=WRAP_MID)
         calc(ws, f"M{r}", f'=IF({C}="","",IF(N{r}="","Ready","Not ready"))', align=CENTER)
         for col in "MN":
             ws[f"{col}{r}"].border = HAIR

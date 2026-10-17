@@ -251,6 +251,9 @@ def main() -> int:
             t2[ins[k][3]] = "Yes"
         t2[ins["consenter"][3]] = "Document owner"
         t2[ins["onRefusal"][3]] = "Proceeds anyway"
+        # A fifth, ours: a mistyped authority, written past the dropdown.
+        t1[f"B{bi['first'] + 4}"] = "Mistyped authority"
+        t1[f"H{bi['first'] + 4}"] = "Agent act"
 
     wbe = recalc(variant("edges", edges))
     no_errors("edge cases", wbe)
@@ -259,12 +262,18 @@ def main() -> int:
     check("edge 2: final authority Not allowed", t1[f"I{r2}"].value, NA)
     check("edge 2: counts as an override", t1[f"J{r2}"].value, "Yes")
     check("edges 1+2: actions with no authority = 1 (edge 1 only)", t1[bi["noAuthority"]].value, 1)
-    check("edges: overrides = 3 (edges 2, 3 and 4)", t1[bi["overrides"]].value, 3)
+    check("edges: overrides = 4 (edges 2, 3, 4 and 5)", t1[bi["overrides"]].value, 4)
     check("edge 3: Agent acts, undo tested blank: Not ready", t2[br["readyCells"][2]].value, "Not ready")
     check("edge 3: why", t2[br["whyCells"][2]].value, REFS["why"]["undoNotTested"])
     check("edge 4: proceeds anyway: Not ready", t2[br["readyCells"][3]].value, "Not ready")
     check("edge 4: why", t2[br["whyCells"][3]].value, REFS["why"]["unsafeRefusal"])
     check("edge 1 on Tab 2: no authority, so no readiness", t2[br["readyCells"][0]].value in (None, ""), True)
+    check("edge 5: a mistyped authority is Not ready", t2[br["readyCells"][4]].value, "Not ready")
+    check("edge 5: why", t2[br["whyCells"][4]].value, REFS["why"]["unknownAuthority"])
+    check("edges: authority not ready = 4 (edges 2, 3, 4 and 5)", t2[br["notReady"]].value, 4)
+    shown = [(ws.title, dv.sqref) for ws in openpyxl.load_workbook(XLSX).worksheets
+             for dv in ws.data_validations.dataValidation if not dv.showErrorMessage]
+    check("every validation refuses a wrong value (showErrorMessage)", shown, [])
 
     # ---- 4 · the blank tabs -----------------------------------------------
     def values(sec: dict) -> dict:

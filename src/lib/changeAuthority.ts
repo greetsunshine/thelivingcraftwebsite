@@ -158,7 +158,16 @@ export const WHY = {
   notActingAs: 'Agent doesn’t act as the consenting person',
   unsafeRefusal: 'No safe outcome when consent is refused',
   accessPresent: 'Access not removed',
+  /** Workbook only: a final authority that is none of the three. The type rules it out here. */
+  unknownAuthority: 'Not one of the three authority levels',
 } as const;
+
+/** "Changes nothing" or "Revises and asks again". Blank is not safe. */
+export const isSafeRefusal = (x: OnRefusal | ''): boolean => x !== '' && SAFE_ON_REFUSAL.includes(x);
+/** The preview shows the full change and says what can't be undone. */
+const previewComplete = (r: Requirements) => r.fullChange === 'Yes' && r.saysIrreversible === 'Yes';
+/** Consent is per change and somebody is named. */
+const consentNamedPerChange = (r: Requirements) => r.perChange === 'Yes' && r.consenter !== '';
 
 export interface Readiness {
   /** Null when the row has no final authority. */
@@ -185,7 +194,7 @@ export function authorityReadiness(authority: Authority | '', tested: YesNo | ''
       if (!filled(r.consenter)) return fail(WHY.noConsenter);
       if (r.perChange !== 'Yes') return fail(WHY.standingConsent);
       if (r.actsAs !== 'Yes') return fail(WHY.notActingAs);
-      if (r.onRefusal === '' || !SAFE_ON_REFUSAL.includes(r.onRefusal)) return fail(WHY.unsafeRefusal);
+      if (!isSafeRefusal(r.onRefusal)) return fail(WHY.unsafeRefusal);
       return { ready: true, why: '' };
     case 'Not allowed':
       if (r.accessRemoved !== 'Yes') return fail(WHY.accessPresent);
@@ -226,11 +235,10 @@ export function requirementsSummary(actions: Action[], reqs: Requirements[]): Re
     actions: per((r, x) => r.authority === x),
     ready: per((r, x) => r.authority === x && r.ready === true),
     notReady: rows.filter((r) => r.ready === false).length,
-    previewHides: consent.filter((r) => r.req.fullChange !== 'Yes' || r.req.saysIrreversible !== 'Yes').length,
-    consentWeak: consent.filter((r) => r.req.perChange !== 'Yes' || !filled(r.req.consenter)).length,
+    previewHides: consent.filter((r) => !previewComplete(r.req)).length,
+    consentWeak: consent.filter((r) => !consentNamedPerChange(r.req)).length,
     notActingAs: consent.filter((r) => r.req.actsAs !== 'Yes').length,
-    unsafeRefusal: consent.filter((r) => r.req.onRefusal === '' || !SAFE_ON_REFUSAL.includes(r.req.onRefusal))
-      .length,
+    unsafeRefusal: consent.filter((r) => !isSafeRefusal(r.req.onRefusal)).length,
     accessPresent: rows.filter((r) => r.authority === 'Not allowed' && r.req.accessRemoved !== 'Yes').length,
   };
 }

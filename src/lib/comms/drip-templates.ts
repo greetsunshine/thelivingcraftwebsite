@@ -245,7 +245,8 @@ const W: Record<string, Wording> = {
     bridge: 'Once an agent has write access, the next question is which of its changes it may make alone.',
     about:
       'The Change Authority Review lists every action the agent can take and marks each one by what an undo really leaves behind. Saving a new version is the common trap: a rollback restores the text, but the version stays in the history. Each action gets one authority level, Agent acts, Preview and consent or Not allowed, and ten checks end in one decision: Ready, Fix first or Hold.',
-    cohortLine: 'Decide where the agent may act and where people retain authority.',
+    // The same line the workbook's cover carries (GENERIC_LINE in resource-cohort-copy.ts).
+    cohortLine: 'Build a working agentic system and develop the reasoning behind it.',
   },
 };
 

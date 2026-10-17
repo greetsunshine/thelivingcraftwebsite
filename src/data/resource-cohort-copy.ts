@@ -138,7 +138,6 @@ const TOPICS: Record<string, Topic> = {
   '/resources/cost-ceiling-worksheet': 'cost',
   '/resources/rework-cost-check': 'cost',
   '/resources/agent-authority-review': 'authority',
-  '/resources/change-authority-review': 'authority',
   '/resources/rule-placement-audit': 'authority',
   '/resources/guides/tool-permissions': 'authority',
   '/resources/agent-failure-triage-kit': 'triage',

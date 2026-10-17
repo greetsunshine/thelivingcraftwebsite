@@ -220,3 +220,27 @@ test('the /resources listing states the same worked-example figures the page com
   assert.match(description, new RegExp(`${inv.listed} actions, ${req.notReady} not ready`));
   assert.match(description, new RegExp(`the decision was ${r.decision}`));
 });
+
+test('the committed workbook was built from these words and rules (refs.json)', async () => {
+  // build_xlsx.py writes refs.json beside the workbook it builds, from the
+  // same modules. A change to a check, a reason or the worked example that is
+  // not followed by a rebuild fails here, rather than shipping an old file
+  // behind the download gate.
+  const { readFile } = await import('node:fs/promises');
+  const refs = JSON.parse(
+    await readFile(new URL('../../tools/change-authority-review/refs.json', import.meta.url), 'utf8'),
+  );
+  assert.deepEqual(
+    refs.checks,
+    CHECKS.map((c) => ({ n: c.n, text: c.text, critical: c.critical })),
+    'rerun tools/change-authority-review/build_xlsx.py',
+  );
+  assert.deepEqual(refs.why, WHY, 'rerun tools/change-authority-review/build_xlsx.py');
+  assert.equal(refs.noOpenItems, NO_OPEN_ITEMS);
+  const r = checklistResult(EXAMPLE_ANSWERS);
+  assert.deepEqual(
+    [refs.expected.total, refs.expected.decision, refs.expected.nextStep],
+    [r.total, r.decision, r.nextStep],
+  );
+  assert.deepEqual(refs.expected.requirements, requirementsSummary(EXAMPLE_ACTIONS, EXAMPLE_REQUIREMENTS));
+});

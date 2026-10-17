@@ -46,9 +46,9 @@ spreadsheet's own results against the brief and against `changeAuthority.ts`.
 ```bash
 python3 -m venv .venv && ./.venv/bin/pip install openpyxl pymupdf pillow
 
-npm test                                                              # includes 17 tests for this tool
+npm test                                                              # includes 18 tests for this tool
 ./.venv/bin/python tools/change-authority-review/build_xlsx.py       # -> downloads/change-authority-review.xlsx and refs.json
-./.venv/bin/python tools/change-authority-review/verify_xlsx.py      # recalculate in LibreOffice and assert (101 checks)
+./.venv/bin/python tools/change-authority-review/verify_xlsx.py      # recalculate in LibreOffice and assert (105 checks)
 ./.venv/bin/python tools/change-authority-review/render_previews.py  # a PNG per printed page, into a temp folder
 ```
 
@@ -59,7 +59,9 @@ checks:
 - the variants: row 8's choice cleared; row 3's preview saying what can't be
   undone; checks 3 and 4 Yes (13, Fix first, next step check 8); then 5 and 8
   Yes (16, Ready, next step check 2); every check Yes (20, Ready, "No open items.");
-- the brief's four edge cases, typed into the blank tabs;
+- the brief's four edge cases, typed into the blank tabs, and a fifth of ours: a
+  mistyped authority ("Agent act") is Not ready, never Ready;
+- every validation refuses a wrong value (`showErrorMessage` is on);
 - the blank tabs show blanks or 0, and no cell holds an error value.
 
 **Rebuild when applications close.** The cover carries the cohort invitation
@@ -93,7 +95,15 @@ from `src/data/resource-cohort-copy.ts`, which names the October 2026 cohort.
   list, so it is greyed only. `Authority ready?` reads only the columns of the
   row's own authority, so a stray value elsewhere changes nothing.
 - **`Authority ready?` is "Ready" exactly when `Why not ready` is blank.** One
-  formula decides both, so they cannot disagree.
+  formula decides both, so they cannot disagree. A final authority that is none
+  of the three reads "Not one of the three authority levels", so it can never
+  fall through to Ready.
+- **Every validation has `showErrorMessage` on.** openpyxl leaves it off, and
+  then Excel accepts anything typed. The Gate Routing Map, Citation Fit Check
+  and Rework Cost Check builders still have it off (found 17 October 2026).
+- **`npm test` fails if the workbook is stale.** It compares `refs.json`, which
+  the build writes, with the checks, reasons and worked example in the
+  TypeScript. Rebuild and commit both together.
 - **"What it changes" in the worked example is ours.** The brief's table left
   that column out. Each row carries a short illustrative phrase.
 - **A blank is unknown.** Undo tested left blank counts as not tested; "If

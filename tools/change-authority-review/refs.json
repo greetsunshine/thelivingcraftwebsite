@@ -915,7 +915,8 @@
     "standingConsent": "Consent is a standing default, not per change",
     "notActingAs": "Agent doesn’t act as the consenting person",
     "unsafeRefusal": "No safe outcome when consent is refused",
-    "accessPresent": "Access not removed"
+    "accessPresent": "Access not removed",
+    "unknownAuthority": "Not one of the three authority levels"
   },
   "noOpenItems": "No open items."
 }
