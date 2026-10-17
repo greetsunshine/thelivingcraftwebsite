@@ -47,8 +47,12 @@ not featured**: a row in `resources.ts` (Agentic system design 11), none in
   `.env.local` and an APFS clone of `node_modules` (`cp -cR`; a symlink breaks Astro's
   paths). Headless Chrome will not go below about 500px wide, so a 375px shot needs the page
   inside a 375px iframe.
-- **Still open:** the held delivery email `resource-change-authority-review` is unapproved;
-  not in the follow-up catalogue; the comment keyword AUTHORITY may clash with the older tool.
+- **Follow-ups:** in the catalogue as LC-T12 with its own wording (`recommend-lc-t12`), not
+  in `RELEASES`. Comment keyword CHANGE, so it cannot clash with the older tool.
+- **Still open:** Sunil approves `resource-change-authority-review` (and, when releasing
+  follow-ups, `recommend-lc-t12`) at `/craft/admin/comms` after the deploy; the Tool Registry
+  entry is in the README, waiting for the registry's location; rebuild the workbook when
+  applications close.
 
 ---
 

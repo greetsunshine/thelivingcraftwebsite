@@ -126,7 +126,7 @@ What to bring: One agent and the artifact or system it changes; a list of every 
 What to do: List every action, try to undo each one and record what remains, give each action an authority level (Agent acts, Preview and consent or Not allowed), fill in what each level needs, and score the ten checks.
 What the reader leaves with: An authority map for that agent (each action, whether it can really be undone, who authorises it and what the preview must show), a list of actions whose authority isn't ready, and a decision: Ready, Fix first or Hold.
 Fulfilment: Download gate (name, role, email)
-Comment keyword: AUTHORITY
+Comment keyword: CHANGE
 ```
 
 ## Still open
@@ -135,6 +135,8 @@ Comment keyword: AUTHORITY
   `src/lib/comms/templates.ts` is unapproved, like every wording there. Until
   it is approved, a request saves and its delivery is recorded `blocked`; the
   file itself downloads in the page either way.
-- **Not in the resource follow-up catalogue** (`src/data/resource-routing.ts`).
-- **The comment keyword AUTHORITY** may now be ambiguous with the older Agent
-  Authority Review if that tool also uses it.
+- **In the follow-up catalogue as LC-T12, not released.** `src/data/resource-routing.ts`
+  holds it, and `recommend-lc-t12` in `drip-templates.ts` is its unapproved wording.
+  It is selected only once it is in `RELEASES` and the wording is approved.
+- **Comment keyword is CHANGE**, not the brief's AUTHORITY, so it cannot clash
+  with the older Agent Authority Review.
