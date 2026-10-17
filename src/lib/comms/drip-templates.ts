@@ -238,6 +238,16 @@ const W: Record<string, Wording> = {
       'Bring one workflow to the Rework Cost Check. Use observed traces where you have them and labelled estimates where you do not. List each return path, the work repeated, its cap and the owner after the last attempt. Compare demand under the same assumptions: a token limit, a spend ceiling and cost per accepted outcome answer different questions.',
     cohortLine: 'Build agentic systems that hold up in production.',
   },
+  // LC-T12: ours, written 17 October 2026 from the tool's page. Unapproved,
+  // like every wording here, until Sunil approves it in the console.
+  'LC-T12': {
+    subject: 'What can the agent be allowed to change?',
+    bridge: 'Once an agent has write access, the next question is which of its changes it may make alone.',
+    about:
+      'The Change Authority Review lists every action the agent can take and marks each one by what an undo really leaves behind. Saving a new version is the common trap: a rollback restores the text, but the version stays in the history. Each action gets one authority level, Agent acts, Preview and consent or Not allowed, and ten checks end in one decision: Ready, Fix first or Hold.',
+    // The same line the workbook's cover carries (GENERIC_LINE in resource-cohort-copy.ts).
+    cohortLine: 'Build a working agentic system and develop the reasoning behind it.',
+  },
 };
 
 /**

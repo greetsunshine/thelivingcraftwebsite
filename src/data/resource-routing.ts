@@ -154,6 +154,13 @@ const CATALOGUE: Omit<DripModule, 'priority' | 'templateKey' | 'released'>[] = [
   m('LC-T11', ['rework-cost-check'], 'The Rework Cost Check', '/resources/rework-cost-check', 'cost and rework',
     ['LC-T07', 'LC-R01', 'LC-T08', 'LC-TPL03', 'LC-T01'],
     ['product', 'engineering_leader', 'founder', 'operations'], 'Run the check', false),
+  // Ours, not the package's (17 October 2026, Sunil: add it to the follow-ups).
+  // Its follow-up order is the authority row's (LC-T02's), and its roles are
+  // a PROPOSED affinity like the rest. Active, but selected only once it is in
+  // RELEASES and its wording is approved, the same two gates as every module.
+  m('LC-T12', ['change-authority-review'], 'The Change Authority Review', '/resources/change-authority-review', 'authority',
+    ['LC-G02', 'LC-T02', 'LC-T06', 'LC-TPL03', 'LC-R03'],
+    ['engineer', 'engineering_leader', 'architect', 'data_ai'], 'Use the Change Authority Review'),
 ];
 
 /**

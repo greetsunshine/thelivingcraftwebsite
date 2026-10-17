@@ -219,6 +219,7 @@ const DOWNLOADS: Record<string, Partial<Record<ResourceKind, Download<any>>>> = 
   'rework-cost-check': { xlsx: staticFile('rework-cost-check.xlsx', XLSX) },
   'citation-fit-check': { xlsx: staticFile('citation-fit-check.xlsx', XLSX) },
   'gate-routing-map': { xlsx: staticFile('gate-routing-map.xlsx', XLSX) },
+  'change-authority-review': { xlsx: staticFile('change-authority-review.xlsx', XLSX) },
   'lc-r01': { csv: worksheetCsv('lc-r01') },
   'lc-r02': { csv: worksheetCsv('lc-r02') },
   'lc-r03': { csv: worksheetCsv('lc-r03') },
