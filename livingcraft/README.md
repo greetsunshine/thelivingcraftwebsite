@@ -18,7 +18,8 @@ This directory is the source of truth for course planning, learner materials, la
 - [Week 1 / Topic 1.1](week-1/topic-1-1/README.md) — approved lesson content and practical-pack status.
 - [Topic 1.1 diagrams](week-1/topic-1-1/diagrams.md) — editable Mermaid source for architecture diagrams.
 - [Topic 1.1 quiz](week-1/topic-1-1/quiz.md) — enterprise scenarios and answer explanations.
-- [Topic 1.1 lab](week-1/topic-1-1/lab/README.md) — learner guide with exact code edits.
+- [Run the lab](week-1/topic-1-1/lab/RUN_THE_LAB.md) — setup, download/clone options, commands, expected results, and troubleshooting.
+- [Topic 1.1 lab exercises](week-1/topic-1-1/lab/README.md) — exact code edits and test exercises.
 - [Lab implementation](week-1/topic-1-1/lab/refund_agent.py)
 - [Lab tests](week-1/topic-1-1/lab/test_refund_agent.py)
 
