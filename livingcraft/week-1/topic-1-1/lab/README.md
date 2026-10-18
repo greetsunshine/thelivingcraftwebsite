@@ -1,3 +1,5 @@
+> **New to the lab?** Start with [RUN_THE_LAB.md](RUN_THE_LAB.md) for Python requirements, downloading or cloning the files, commands to run, expected results, and troubleshooting.
+
 # Topic 1.1 Lab — Draw the Action Boundary
 ## Learner workbook: exact edits to make
 
